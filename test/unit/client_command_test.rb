@@ -15,6 +15,7 @@ class BasicCommandTests < Test::Unit::TestCase
     @regcmd = RegisterCommand.new('nick','user','realname')
     @nickcmd = NickCommand.new('newnick')
     @joincmd = JoinCommand.new('#channel')
+    @partcmd = PartCommand.new('#channel')
     
     # stubs:
     @cq = CommandQueueStub.new    
@@ -54,6 +55,10 @@ class BasicCommandTests < Test::Unit::TestCase
   
   def test_join_command
     assert_command_sends @joincmd, 'JOIN #channel'
+  end
+  
+  def test_part_command
+    assert_command_sends @partcmd, 'PART #channel'
   end
 
   # helper to make testing of basic queue commands easier

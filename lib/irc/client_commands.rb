@@ -59,4 +59,8 @@ class JoinCommand < IRCCommand
   queue_command CMD_JOIN
 end
 
+class PartCommand < IRCCommand
+  queue_command CMD_PART
+end
+
 end # module
