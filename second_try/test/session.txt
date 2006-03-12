@@ -1,0 +1,83 @@
+easystreet:~ nathan$ telnet f3h.com 6667
+Trying 64.239.4.33...
+Connected to f3h.com.
+Escape character is '^]'.
+:server.com NOTICE AUTH :*** Looking up your hostname...
+:server.com NOTICE AUTH :*** Found your hostname, cached
+USER test 0 * :test
+NICK test
+:server.com 001 test :Welcome to the bigfeh IRC Network test!~test@subdomain.domain.net
+:server.com 002 test :Your host is server.com[@0.0.0.0], running version bahamut-1.4(36)
+:server.com 003 test :This server was created Sun Jan 18 2004 at 20:44:20 MST
+:server.com 004 test server.com bahamut-1.4(36) oOiwscrkKnfydaAbgheFxXjI biklLmMnoprRstvcj
+:server.com 005 test NOQUIT SAFELIST MODES=6 MAXCHANNELS=10 MAXBANS=100 NICKLEN=30 TOPICLEN=307 KICKLEN=307 CHANTYPES=# PREFIX=(ov)@+ NETWORK=bigfeh SILENCE=10 :are available on this server
+:server.com 005 test WATCH=128 CASEMAPPING=ascii CHANMODES=b,k,l,ciLmMnOprRst :are available on this server
+:server.com 251 test :There are 0 users and 55 invisible on 1 servers
+:server.com 252 test 4 :IRC Operators online
+:server.com 254 test 13 :channels formed
+:server.com 255 test :I have 55 clients and 0 servers
+:server.com 265 test :Current local users: 55 Max: 68
+:server.com 266 test :Current global users: 55 Max: 73
+:server.com NOTICE test :*** Notice -- motd was last changed at 18/1/2004 19:23
+:server.com NOTICE test :*** Notice -- Please read the motd if you haven't read it
+:server.com 375 test :- server.com Message of the Day - 
+:server.com 372 test :- *** This is the short motd ***
+:server.com 376 test :End of /MOTD command.
+:test MODE test :+i
+JOIN #
+:test!~test@subdomain.domain.net JOIN :#
+:server.com 332 test # :sam in fr0t thu-sat 620-232-4749 | TJS Crested Butte March 15-19 | Flogging Molly Mar 4 (sock, tonypetragilia and mimi, marthike) | Steamboat Condo Mar 10-12 (sock, mike) | RRR Mar 24-26
+:server.com 333 test # Sam-I-Am 1140037061
+:server.com 353 test @ # :test creethe`w Cy-w3rk nathan mrscreethe Gand-w3rk mike jeremy sock yablo bishop blue RudeDog Gand-treo Gand Becky @rb roshambot1 Sam-I-Am gurov-treo @nathan2 alog- 
+:server.com 366 test # :End of /NAMES list.
+PRIVMSG # :hello
+:nathan!~nathan@subdomain.domain.net PRIVMSG # :hello!
+:nathan!~nathan@subdomain.domain.net PRIVMSG test :directed
+:nathan_!~nathan@subdomain.domain.net JOIN :#
+:nathan_!~nathan@subdomain.domain.net PART # :heh
+QUIT :k got my stuff 
+ERROR :Closing Link: subdomain.domain.net (Quit: k got my stuff)
+Connection closed by foreign host.
+
+
+
+Last login: Sat Feb 25 17:20:12 on ttyp4
+bluepaddle:~ nathan$ telnet f3h.com 6667
+Trying 64.239.4.33...
+Connected to f3h.com.
+Escape character is '^]'.
+:bigfeh.com NOTICE AUTH :*** Looking up your hostname...
+:bigfeh.com NOTICE AUTH :*** Found your hostname, cached
+USER asdf 0 * :asdf
+NICK asdf
+:bigfeh.com 001 asdf :Welcome to the bigfeh IRC Network asdf!~asdf@c-24-9-121-85.hsd1.co.comcast.net
+:bigfeh.com 002 asdf :Your host is bigfeh.com[@0.0.0.0], running version bahamut-1.4(36)
+:bigfeh.com 003 asdf :This server was created Sun Jan 18 2004 at 20:44:20 MST
+:bigfeh.com 004 asdf bigfeh.com bahamut-1.4(36) oOiwscrkKnfydaAbgheFxXjI biklLmMnoprRstvcj
+:bigfeh.com 005 asdf NOQUIT SAFELIST MODES=6 MAXCHANNELS=10 MAXBANS=100 NICKLEN=30 TOPICLEN=307 KICKLEN=307 CHANTYPES=# PREFIX=(ov)@+ NETWORK=bigfeh SILENCE=10 :are available on this server
+:bigfeh.com 005 asdf WATCH=128 CASEMAPPING=ascii CHANMODES=b,k,l,ciLmMnOprRst :are available on this server
+:bigfeh.com 251 asdf :There are 0 users and 49 invisible on 1 servers
+:bigfeh.com 252 asdf 3 :IRC Operators online
+:bigfeh.com 254 asdf 13 :channels formed
+:bigfeh.com 255 asdf :I have 49 clients and 0 servers
+:bigfeh.com 265 asdf :Current local users: 49 Max: 68
+:bigfeh.com 266 asdf :Current global users: 49 Max: 73
+:bigfeh.com NOTICE asdf :*** Notice -- motd was last changed at 18/1/2004 19:23
+:bigfeh.com NOTICE asdf :*** Notice -- Please read the motd if you haven't read it
+:bigfeh.com 375 asdf :- bigfeh.com Message of the Day - 
+:bigfeh.com 372 asdf :- *** This is the short motd ***
+:bigfeh.com 376 asdf :End of /MOTD command.
+:asdf MODE asdf :+i
+JOIN #
+:asdf!~asdf@c-24-9-121-85.hsd1.co.comcast.net JOIN :#
+:bigfeh.com 332 asdf # :TJS Crested Butte March 15-19 | Steamboat Condo Mar 10-12 (sock, mike) | RRR Mar 24-26
+:bigfeh.com 333 asdf # lee 1140854692
+:bigfeh.com 353 asdf @ # :asdf lee creethe nathan terrence- mike Gand-treo Cy-w3rk blue sock Gand jeremy bishop yablo RudeDog Becky @rb roshambot1 Sam-I-Am gurov-treo @nathan2 alog- 
+:bigfeh.com 366 asdf # :End of /NAMES list.
+PRIVMSG # :hehe telnet again
+:nathan!~nathan@c-24-9-121-85.hsd1.co.comcast.net NICK :nathan3
+:nathan3!~nathan@c-24-9-121-85.hsd1.co.comcast.net NICK :nathan
+NICK nathan
+:bigfeh.com 433 asdf nathan :Nickname is already in use.
+NICK jkl
+:asdf!~asdf@c-24-9-121-85.hsd1.co.comcast.net NICK :jkl

@@ -1,0 +1,14 @@
+--- 
+nick: BoggleBot
+user: boggle
+realname: "Nathan's Ruby Bot Framework - BoggleBot"
+#host: f3h.com
+host: localhost
+port: 6667
+autojoin:
+  - '#boggle'
+retry_wait: 5
+admin_pass: the
+require_prefix_in_private: true
+operuser: trebek
+operpass: floodme
