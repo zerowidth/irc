@@ -1,0 +1,18 @@
+require 'irc/command'
+
+module IRC
+
+class DataCommand < IRCCommand
+  type :uses_plugins
+
+  def initialize(data)
+    @data = data
+  end
+  
+  def execute(plugin_handler)
+    
+  end
+
+end
+  
+end # module
