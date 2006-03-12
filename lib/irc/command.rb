@@ -7,7 +7,9 @@
 #   :uses_queue   # for commands that merely add other commands to the queue
 # To define a command type, include the statement
 #   type :sometype
-# in the command class definition
+# in the command class definition.
+# IRCCommands rely on someone else to provide the necessary and correct
+# arguments to their execute() methods: this is assisted by the #type method.
 
 module IRC  
 
