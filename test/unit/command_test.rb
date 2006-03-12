@@ -1,5 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
-require 'irc/commands'
+require 'irc/command'
 
 class CommandTest < Test::Unit::TestCase
   include IRC
