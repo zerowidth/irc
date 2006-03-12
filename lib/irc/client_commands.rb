@@ -1,4 +1,5 @@
 require 'irc/command'
+require 'irc/message'
 
 module IRC
 
@@ -10,7 +11,7 @@ class DataCommand < IRCCommand
   end
   
   def execute(plugin_handler)
-    
+    msg = Message.new(@data)
   end
 
 end

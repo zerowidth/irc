@@ -2,7 +2,7 @@
 # This will handle reconnects, receiving data from the socket, sending data
 # to the socket, etc.
 
-# To use IRCConnection, insantiate it with the host and port, and then
+# To use IRCConnection, instantiate it with the host and port, and then
 # call start(). This will begin the internal data processing thread that
 # connects to the server, receives data, and handles reconnects
 
