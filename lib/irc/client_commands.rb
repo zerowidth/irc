@@ -52,13 +52,11 @@ end
 
 # NickCommand: sends nick change message
 class NickCommand < IRCCommand
-  type :uses_queue
-  def initialize(nick)
-    @nick = nick
-  end
-  def execute(queue)
-    queue.add SendCommand.new("NICK #{@nick}")
-  end
+  queue_command CMD_NICK
+end
+
+class JoinCommand < IRCCommand
+  queue_command CMD_JOIN
 end
 
 end # module

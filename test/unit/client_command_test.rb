@@ -14,6 +14,7 @@ class BasicCommandTests < Test::Unit::TestCase
     @sendcmd = SendCommand.new('send this data')
     @regcmd = RegisterCommand.new('nick','user','realname')
     @nickcmd = NickCommand.new('newnick')
+    @joincmd = JoinCommand.new('#channel')
     
     # stubs:
     @cq = CommandQueueStub.new    
@@ -48,11 +49,20 @@ class BasicCommandTests < Test::Unit::TestCase
   end
   
   def test_nick_command
-    assert_equal :uses_queue, @nickcmd.type
+    assert_command_sends @nickcmd, 'NICK newnick'
+  end
+  
+  def test_join_command
+    assert_command_sends @joincmd, 'JOIN #channel'
+  end
+
+  # helper to make testing of basic queue commands easier
+  def assert_command_sends(cmd, data)
+    assert_equal :uses_queue, @joincmd.type
     assert @cq.empty?
-    @nickcmd.execute(@cq)
+    cmd.execute(@cq)
     assert_equal SendCommand, @cq.queue[0].class
-    assert_equal 'NICK newnick', @cq.queue[0].data
+    assert_equal data, @cq.queue[0].data
   end
 
 end

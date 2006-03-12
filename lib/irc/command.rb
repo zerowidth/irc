@@ -1,15 +1,29 @@
-# Commands used by the client
-# This generally implements the Command pattern
-# Commands can be set to the following types:
-#   :uses_client  # for commands that need to execute or modify high-level things in the client
-#   :uses_socket  # for commands that need to send data
-#   :uses_plugins # for data commands, which talk to the plugin handler
-#   :uses_queue   # for commands that merely add other commands to the queue
-# To define a command type, include the statement
-#   type :sometype
-# in the command class definition.
-# IRCCommands rely on someone else to provide the necessary and correct
-# arguments to their execute() methods: this is assisted by the #type method.
+=begin IRCCommand: commands used by the client
+
+This generally implements the Command pattern.
+
+Commands can be set to the following types:
+  :uses_client  # for commands that need to execute or modify high-level things in the client
+  :uses_socket  # for commands that need to send data
+  :uses_plugins # for data commands, which talk to the plugin handler
+  :uses_queue   # for commands that merely add other commands to the queue
+
+To define a command type, include the statement
+  type :sometype
+in the command class definition.
+
+For common, basic text commands that add a single send message to the command
+queue (such as NICK, JOIN, PART) there is a queue_command "macro" that makes it easier:
+  class NoticeCommand < IRCCommand
+    queue_command CMD_NOTICE
+  end
+
+IRCCommands rely on someone else to provide the necessary and correct
+arguments to their execute() methods: this is assisted by the #type method.
+
+=end
+
+require 'irc/rfc2812'
 
 module IRC  
 
@@ -36,6 +50,18 @@ class << IRCCommand
   def type(type)
     # redefine #type() to return the type (as a symbol)
     class_eval %{ def type; :#{type}; end }
+  end
+  
+  def queue_command(command_type)
+    class_eval %{
+      type :uses_queue
+      def initialize(data)
+        @data = data
+      end
+      def execute(queue)
+        queue.add SendCommand.new("#{command_type} " + @data)
+      end
+    }
   end
 end
 
