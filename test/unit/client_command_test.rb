@@ -1,20 +1,10 @@
 require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
 require 'irc/client_commands'
 require 'mocks/connection_mock' # connection mock
+require 'stubs/command_queue_stub' # command queue stub
 
 require 'rubygems'
 require 'flexmock' # for generic mocks
-
-
-# had to create it this way since the bot gets called with .config[something]
-class MockClient < FlexMock
-  def initialize
-    super('mock client')
-  end
-  def config
-    self
-  end  
-end
 
 class BasicCommandTests < Test::Unit::TestCase
   include IRC
@@ -22,9 +12,13 @@ class BasicCommandTests < Test::Unit::TestCase
   def setup
     @datacmd = DataCommand.new(':server.com PRIVMSG #chan :message')
     @sendcmd = SendCommand.new('send this data')
+    @regcmd = RegisterCommand.new('nick','user','realname')
+    @nickcmd = NickCommand.new('newnick')
+    
+    # stubs:
+    @cq = CommandQueueStub.new    
   end
   
-  ##### DataCommand testing
   def test_data_command
     assert_equal :uses_plugins, @datacmd.type
     
@@ -35,13 +29,30 @@ class BasicCommandTests < Test::Unit::TestCase
     end
   end
   
-  ##### SendCommand testing
   def test_send_command
     assert_equal :uses_socket, @sendcmd.type
+    assert_equal 'send this data', @sendcmd.data # .data accessor (easier for testing)
     ConnectionMock.use('connection') do |conn|
       conn.should_receive(:send).with('send this data').once
       @sendcmd.execute(conn)
     end
   end
   
+  def test_register_command
+    assert_equal :uses_queue, @regcmd.type
+    assert @cq.empty?
+    @regcmd.execute(@cq)
+    assert_equal 2, @cq.queue.size
+    assert_equal 'USER user 0 * :realname', @cq.queue[0].data
+    assert_equal NickCommand, @cq.queue[1].class
+  end
+  
+  def test_nick_command
+    assert_equal :uses_queue, @nickcmd.type
+    assert @cq.empty?
+    @nickcmd.execute(@cq)
+    assert_equal SendCommand, @cq.queue[0].class
+    assert_equal 'NICK newnick', @cq.queue[0].data
+  end
+
 end
