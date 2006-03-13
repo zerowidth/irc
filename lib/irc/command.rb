@@ -45,7 +45,7 @@ class IRCCommand
   end
 end
 
-# Metaprogramming for "type :foo" macro
+# Metaprogramming for "type :foo" and queue_command CMD_WHATEV
 class << IRCCommand
   def type(type)
     # redefine #type() to return the type (as a symbol)

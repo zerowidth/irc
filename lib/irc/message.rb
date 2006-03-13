@@ -18,7 +18,7 @@ module IRC
 #      @client = client
       @prefix = {}
       @params = []
-      @sender = @receiver = @message_type = nil
+      @sender = @message_type = nil
       @raw_message = data
       parse_message(data)
     end
@@ -54,8 +54,9 @@ module IRC
       @params << params << message
       @params.flatten! # params is an array, so flatten it after it's added
       
-      @sender = @prefix[:server] ? @prefix[:server] : @prefix[:nick]
-      @receiver = @params[0]
+      # this handles both normal messages and direct command messages from the server
+      @sender = @prefix[:server] ? @prefix[:server] : 
+        ( @prefix[:nick] ? @prefix[:nick] : @params[0] )
 
       @message_type = type
       

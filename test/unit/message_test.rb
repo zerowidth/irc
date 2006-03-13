@@ -6,9 +6,6 @@ class MessageTest < Test::Unit::TestCase
   
   def setup
     @private_privmsg = ':nathan!~nathan@subdomain.domain.net PRIVMSG rbot :hello there!'
-    @public_privmsg = ':nathan!~nathan@subdomain.domain.net PRIVMSG #chan :hello there!'
-    @private_notice = ':nathan!~nathan@subdomain.domain.net NOTICE rbot :hello there!'
-    @public_notice = ':nathan!~nathan@subdomain.domain.net NOTICE #chan :hello there!'
     @general_server_message = ':server.com 001 rbot :Welcome to the network: dude!'
     @server_ping_message = 'PING :server.com'
   end
@@ -33,7 +30,7 @@ class MessageTest < Test::Unit::TestCase
     assert_nil msg.prefix[:user]
     assert_nil msg.prefix[:host]
     assert_equal 'server.com', msg.sender
-    assert_equal 'rbot', msg.receiver
+    #assert_equal 'rbot', msg.receiver
   end
   
   # test parsing for weird PING messages
@@ -41,6 +38,7 @@ class MessageTest < Test::Unit::TestCase
     msg = Message.new(@server_ping_message)
     assert_nil msg.prefix[:server]
     assert_equal 'server.com', msg.params[0]
+    assert_equal 'server.com', msg.sender
   end
   
 end

@@ -5,7 +5,7 @@ class CommandQueueStub
   end
 
   def add(*elems)
-    @queue.push *elems
+    @queue.push(*elems)
   end
 
   def dequeue()
