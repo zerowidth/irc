@@ -28,11 +28,11 @@ class PluginTest < Test::Unit::TestCase
   def test_private_message
     # test with normal :nick set
     assert_equal true, @plugin.private_message?(@private_privmsg)
-    assert_equal false, @plugin.private_message?(@public_privmsg)
+    assert_false @plugin.private_message?(@public_privmsg)
     assert_equal true, @plugin.private_message?(@private_notice)
-    assert_equal false, @plugin.private_message?(@public_notice)
-    assert_equal false, @plugin.private_message?(@general_server_message)
-    assert_equal false, @plugin.private_message?(@ping_message)
+    assert_false @plugin.private_message?(@public_notice)
+    assert_false @plugin.private_message?(@general_server_message)
+    assert_false @plugin.private_message?(@ping_message)
   end
   
   def test_private_reply

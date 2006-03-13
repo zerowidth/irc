@@ -54,7 +54,7 @@ class ConnectionTest < Test::Unit::TestCase
     
     # disconnect
     @conn.disconnect()
-    assert_equal false, @conn.connected?
+    assert_false @conn.connected?
     
     # check that disconnect doesn't work twice
     assert_raises RuntimeError do
@@ -96,7 +96,7 @@ class ConnectionTest < Test::Unit::TestCase
     t = Thread.new { @client = @server.accept() } # wait for another connection
     t.join(RETRY_WAIT*2) # wait for twice the retry interval
     
-    assert_equal false, @client.closed?
+    assert_false @client.closed?
     assert @conn.connected?
 
     # make sure it works again

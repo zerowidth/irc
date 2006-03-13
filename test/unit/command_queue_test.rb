@@ -11,7 +11,7 @@ class CommandQueueTest < Test::Unit::TestCase
   def test_basic_queue_functions
     assert @cq.empty?
     @cq.add(:foo)
-    assert_equal false, @cq.empty?
+    assert_false @cq.empty?
     @cq.add(:bar)
     foo = @cq.dequeue()
     assert_equal :foo, foo
@@ -33,7 +33,7 @@ class CommandQueueTest < Test::Unit::TestCase
     assert t.alive?
     @cq.add(:data) # throw something on the queue
     t.join(0.1) # join the thread, with timeout just in case
-    assert_equal false, t.alive?
+    assert_false t.alive?
     assert_equal :data, data
   end
   

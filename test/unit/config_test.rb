@@ -38,7 +38,7 @@ class ConfigTest < Test::Unit::TestCase
   end
   
   def test_readonly
-    assert_equal false, @config.readonly?
+    assert_false @config.readonly?
     @config.readonly!
     assert @config.readonly?
     assert_raise RuntimeError do
@@ -47,11 +47,11 @@ class ConfigTest < Test::Unit::TestCase
   end
   
   def test_writeable
-    assert_equal false, @config.readonly?
+    assert_false @config.readonly?
     @config.readonly!
     assert @config.readonly?
     @config.writeable!
-    assert_equal false, @config.readonly?
+    assert_false @config.readonly?
   end
   
 end
