@@ -46,4 +46,12 @@ class ConfigTest < Test::Unit::TestCase
     end
   end
   
+  def test_writeable
+    assert_equal false, @config.readonly?
+    @config.readonly!
+    assert @config.readonly?
+    @config.writeable!
+    assert_equal false, @config.readonly?
+  end
+  
 end

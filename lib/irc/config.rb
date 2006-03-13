@@ -55,6 +55,10 @@ module IRC
       @readonly = true
     end
     
+    def writeable!
+      @readonly = false
+    end
+    
     # called by client before starting - gotta make sure everything's set up
     def exception_unless_configured
       required = @config.find_all {|key, val| val == :required }
