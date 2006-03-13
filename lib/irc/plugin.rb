@@ -24,6 +24,10 @@ class Plugin
     @state = state
   end
   
+  # redefine this to perform any cleanup work
+  def teardown
+  end
+  
   private #############################
   # helper methods:
 
