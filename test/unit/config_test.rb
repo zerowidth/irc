@@ -26,6 +26,9 @@ class ConfigTest < Test::Unit::TestCase
     assert_raise(Config::ConfigOptionRequired) do
       @config[:host]
     end
+    assert_raise(Config::ConfigOptionRequired) do
+      @config.exception_unless_configured
+    end
   end
   
   def test_config_setting_and_getting
