@@ -39,7 +39,8 @@ class IRCConnection
     raise "already disconnected" unless connected?
     @disconnect = true; # set the flag
     @socket.close # then kill the connection
-    @connection_thread.join # now join the thread - catch exceptions, and close it all down
+    # now join the thread - catch exceptions, and close it all down
+    @connection_thread.join if @connection_thread
     @connection_thread = nil
   end
   

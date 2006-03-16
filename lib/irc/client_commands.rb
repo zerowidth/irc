@@ -33,6 +33,19 @@ class SendCommand < IRCCommand
   end
 end
 
+# QuitCommand: tells client to quit (with optional reason)
+class QuitCommand < IRCCommand
+  type :uses_client
+  
+  def initialize(reason=nil)
+    @reason = reason
+  end
+    
+  def execute(client)
+    client.quit(@reason)
+  end
+end
+
 # RegisterCommand: (attempts to) register the client on the network
 class RegisterCommand < IRCCommand
   type :uses_queue

@@ -12,13 +12,14 @@ class BasicCommandTests < Test::Unit::TestCase
   def setup
     @datacmd = DataCommand.new(':server.com PRIVMSG #chan :message')
     @sendcmd = SendCommand.new('send this data')
+    @quitcmd = QuitCommand.new('reason')
     @regcmd = RegisterCommand.new('nick','user','realname')
     @nickcmd = NickCommand.new('newnick')
     @joincmd = JoinCommand.new('#channel')
     @partcmd = PartCommand.new('#channel')
     
     # stubs:
-    @cq = CommandQueueStub.new    
+    @cq = CommandQueueStub.new
   end
   
   def test_data_command
@@ -38,6 +39,14 @@ class BasicCommandTests < Test::Unit::TestCase
       conn.should_receive(:send).with('send this data').once
       @sendcmd.execute(conn)
     end
+  end
+  
+  def test_quit_command
+    assert_equal :uses_client, @quitcmd.type
+    FlexMock.use('client mock') do |client|
+      client.should_receive(:quit).with('reason').once
+      @quitcmd.execute(client)
+    end # verifies the mock's expectations
   end
   
   def test_register_command
