@@ -44,9 +44,12 @@ class PluginManagerTest < Test::Unit::TestCase
     def privmsg(msg)
       raise 'KABOOM'
     end
-    def teardown
-      sleep(0.2)
+    def m001(msg)
+      sleep(5)
     end
+#    def teardown
+#      sleep(0.2)
+#    end
   end
   
   # expose the guts of plugin manager for thorough testing
@@ -135,7 +138,8 @@ class PluginManagerTest < Test::Unit::TestCase
     pm = get_new_pm_with_nasty
     pm.dispatch(@private_privmsg) # the dispatch will throw an exception
     assert_equal 1, pm.threads.size
-    sleep(PluginManager::THREAD_READY_WAIT)
+    sleep(PluginManager::THREAD_READY_WAIT * 2 )
+    # phantom error happening here if the thread doesn't finish fast enough - needed to wait longer
     assert_equal 0, pm.threads.size # if it got this far without exceptions, it's ok
   end
   
@@ -158,9 +162,12 @@ class PluginManagerTest < Test::Unit::TestCase
     pm = get_new_pm_with_nasty
     assert_equal 0, pm.threads.size
     t = Thread.new { pm.teardown }
-    pm.dispatch(@private_privmsg)
+    # make sure teardown runs first! this was causing phantom failures when the dispatch
+    # call was being executed before the teardown call
+    t.join(0.1)
+    pm.dispatch(@general_server_message) # waits, but shouldn't ever execute if teardown is successful
     assert_equal 0, pm.threads.size # nothing should have been dispatched!
-    t.join
+    t.join # finish up
   end
   
   ##### helpers
@@ -171,7 +178,7 @@ class PluginManagerTest < Test::Unit::TestCase
   end
   
   def get_new_pm_with_nasty
-    PluginManager.register_plugin(NastyPlugin,CMD_PRIVMSG)
+    PluginManager.register_plugin(NastyPlugin,CMD_PRIVMSG,RPL_WELCOME)
     PluginManager.new(nil,nil,nil)
   end
 
