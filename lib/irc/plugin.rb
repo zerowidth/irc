@@ -11,6 +11,9 @@ Numeric reply methods are prefixed with 'm':
 Also in Plugin, various helpers are defined: reply, reply_command, etc. to reply to a message.
 
 =end
+# so plugins can merely require 'irc/plugin' and have access to PluginManager
+require 'irc/plugin_manager' 
+
 require 'irc/client_commands'
 require 'irc/message'
 

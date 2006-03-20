@@ -65,7 +65,18 @@ end
 
 # NickCommand: sends nick change message
 class NickCommand < IRCCommand
-  queue_command CMD_NICK
+  type :uses_queue_config_state # uses the queue and the state
+  
+  def initialize(nick)
+    @nick = nick
+  end
+  
+  def execute(queue,config,state)
+    queue.add SendCommand.new(CMD_NICK + ' ' + @nick)
+    # save the new nick, but don't change the existing nick until the server
+    # sends a response back saying it was successful (this is handled elsewhere)
+    state[:newnick] = @nick 
+  end
 end
 
 class JoinCommand < IRCCommand

@@ -20,6 +20,8 @@ class BasicCommandTests < Test::Unit::TestCase
     
     # stubs:
     @cq = CommandQueueStub.new
+    @config = {}
+    @state = {}
   end
   
   def test_data_command
@@ -59,7 +61,11 @@ class BasicCommandTests < Test::Unit::TestCase
   end
   
   def test_nick_command
-    assert_command_sends @nickcmd, 'NICK newnick'
+    assert_equal :uses_queue_config_state, @nickcmd.type
+    assert @cq.empty?
+    @nickcmd.execute(@cq,@config,@state)
+    assert_equal SendCommand, @cq.queue[0].class
+    assert_equal 'NICK newnick', @cq.queue[0].data
   end
   
   def test_join_command
@@ -72,7 +78,7 @@ class BasicCommandTests < Test::Unit::TestCase
 
   # helper to make testing of basic queue commands easier
   def assert_command_sends(cmd, data)
-    assert_equal :uses_queue, @joincmd.type
+    assert_equal :uses_queue, cmd.type
     assert @cq.empty?
     cmd.execute(@cq)
     assert_equal SendCommand, @cq.queue[0].class

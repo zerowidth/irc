@@ -94,7 +94,11 @@ class Client
   end
 
   def queue_loop
-    loop do # could use a flag here, but eh. dequeue() is a blocking call, this thread gets killed
+    # could use loop do here, since this method blocks up on dequeue.
+    # however: using the quit flag means this (internal!) loop/thread can be 
+    # stopped after only one dequeue by setting the quit flag so it exits immediately.
+    # this speeds up testing, so until @quit it is!
+    until @quit do
       command = @command_queue.dequeue()
       case command.type
       # very few plugins will do this, and then only to call quit().
@@ -109,6 +113,8 @@ class Client
         command.execute(@plugin_manager)
       when :uses_queue
         command.execute(@command_queue)
+      when :uses_queue_config_state
+        command.execute(@command_queue, @config, @state)
       end
     end
   end

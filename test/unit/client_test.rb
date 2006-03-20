@@ -1,5 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
 require 'irc/client'
+require 'mocks/command_mock' # mock command for command execution testing
 
 class ClientTest < Test::Unit::TestCase
   include IRC
@@ -10,11 +11,17 @@ class ClientTest < Test::Unit::TestCase
   
   # override the class to make it more transparent for testing
   class IRC::Client
-    attr_reader :state, :plugin_manager, :connection, :queue_thread
+    attr_reader :state, :plugin_manager, :connection, :command_queue # make the basics accessible
+    attr_reader :queue_thread # make queue and quit flag accessible
+    def set_quit; @quit = true; end # this is highly implementation-related!
   end
   # same for CommandQueue
   class IRC::CommandQueue
     attr_reader :q
+  end
+  # same for PluginManager, for testing loading of the core plugin
+  class IRC::PluginManager
+    attr_reader :plugins, :handlers
   end
   
   def setup
@@ -99,6 +106,11 @@ class ClientTest < Test::Unit::TestCase
     assert_equal 'QUIT :quitting', gets_from_server
   end
   
+  # TODO
+  def test_core_plugin_gets_loaded
+    
+  end
+  
   # tests for refactoring -- changing start() from a blocking call to a nonblocking call,
   # and adding the #wait_for_quit() method
   def test_start_returns
@@ -118,8 +130,36 @@ class ClientTest < Test::Unit::TestCase
     t.join(0.5) # wait for quit, this should return and the thread should die
     assert_false t.alive?, 'client wait should have returned'
   end
-    
-  # helpers
+
+  # test that the client correctly executes commands based on their type.
+  # This tests that the client grabs the commands off the queue and that they
+  # also get executed correctly.
+  def test_client_command_execution
+    client_connect()
+    command_type_test(:uses_client, @client)
+  end
+  
+  def test_socket_command_execution
+    client_connect()
+    command_type_test(:uses_socket, @client.connection)
+  end
+  
+  def test_plugins_command_execution
+    client_connect()
+    command_type_test(:uses_plugins, @client.plugin_manager)
+  end
+  
+  def test_queue_command_execution
+    client_connect()
+    command_type_test(:uses_queue, @client.command_queue)
+  end
+  
+  def test_queue_config_state_command_execution
+    client_connect()
+    command_type_test(:uses_queue_config_state, @client.command_queue, @client.config, @client.state)
+  end
+
+  # helpers ###########################
   def config_client
     @client.config[:host] = TEST_HOST
     @client.config[:port] = TEST_PORT
@@ -140,5 +180,34 @@ class ClientTest < Test::Unit::TestCase
     data
   end
   
-  
+  # tests that a command of type command_type has execute() invoked with execute_called_with
+  def command_type_test(command_type, *execute_called_with)
+    # this might be a race condition, the queue thread might not have checked @quit already.
+    # If this whole test fails, check that the queue thread isn't dead yet
+    @client.queue_thread.join(0.05) # try to avoid race condition by waiting a tiny bit
+    @client.set_quit # set the flag after the thread's waiting on the queue
+    
+    # there's also another race condition here, one involving scheduling. even if the above
+    # is successful, it's possible that the queue thread quits out before anything
+    # is added to the command queue. if this happens, the .type() call will not be called.
+
+    CommandMock.use('mock command') do |cmd|
+      # make sure the command is executed with the correct arguments
+      cmd.should_receive(:execute).with(*execute_called_with).once # execute only once!
+      # placed second, since it's evaluated first (yay flexmock) (checking for race condition)
+      # if this fails, see above message
+      cmd.should_receive(:type).and_return(command_type).at_least.once
+
+      assert @client.queue_thread.alive?, 'race condition encountered, please check'
+      # enqueuing this will cause the command to parse nearly instantly.
+      @client.command_queue.add(cmd)
+      
+      # join the queue thread to make sure the command gets executed.
+      # since @quit is set, it should stop after processing the command, aka immediately.
+      @client.queue_thread.join(0.1)
+
+    end
+
+    assert_false @client.queue_thread.alive?, 'check queue thread quit flag, something''s wrong'    
+  end
 end
