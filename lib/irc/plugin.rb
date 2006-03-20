@@ -13,12 +13,11 @@ Also in Plugin, various helpers are defined: reply, reply_command, etc. to reply
 =end
 # so plugins can merely require 'irc/plugin' and have access to PluginManager
 require 'irc/plugin_manager' 
-
-require 'irc/client_commands'
-require 'irc/message'
+require 'irc/client_commands' # for creating new commands 
+require 'irc/message' # messages to handle
 
 module IRC
-  
+
 class Plugin
   
   def initialize(command_queue, config, state)

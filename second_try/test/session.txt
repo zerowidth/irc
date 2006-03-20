@@ -81,3 +81,52 @@ NICK nathan
 :bigfeh.com 433 asdf nathan :Nickname is already in use.
 NICK jkl
 :asdf!~asdf@c-24-9-121-85.hsd1.co.comcast.net NICK :jkl
+
+
+telnet f3h.com 6667
+Trying 64.239.4.33...
+Connected to f3h.com.
+Escape character is '^]'.
+:bigfeh.com NOTICE AUTH :*** Looking up your hostname...
+:bigfeh.com NOTICE AUTH :*** Found your hostname
+USER foo 0 * :bar
+NICK one
+:bigfeh.com 001 one :Welcome to the bigfeh IRC Network one!~foo@c-67-190-127-60.hsd1.co.comcast.net
+:bigfeh.com 002 one :Your host is bigfeh.com[@0.0.0.0], running version bahamut-1.4(36)
+:bigfeh.com 003 one :This server was created Sun Jan 18 2004 at 20:44:20 MST
+:bigfeh.com 004 one bigfeh.com bahamut-1.4(36) oOiwscrkKnfydaAbgheFxXjI biklLmMnoprRstvcj
+:bigfeh.com 005 one NOQUIT SAFELIST MODES=6 MAXCHANNELS=10 MAXBANS=100 NICKLEN=30 TOPICLEN=307 KICKLEN=307 CHANTYPES=# PREFIX=(ov)@+ NETWORK=bigfeh SILENCE=10 :are available on this server
+:bigfeh.com 005 one WATCH=128 CASEMAPPING=ascii CHANMODES=b,k,l,ciLmMnOprRst :are available on this server
+:bigfeh.com 251 one :There are 0 users and 50 invisible on 1 servers
+:bigfeh.com 252 one 4 :IRC Operators online
+:bigfeh.com 254 one 12 :channels formed
+:bigfeh.com 255 one :I have 50 clients and 0 servers
+:bigfeh.com 265 one :Current local users: 50 Max: 68
+:bigfeh.com 266 one :Current global users: 50 Max: 73
+:bigfeh.com NOTICE one :*** Notice -- motd was last changed at 18/1/2004 19:23
+:bigfeh.com NOTICE one :*** Notice -- Please read the motd if you haven't read it
+:bigfeh.com 375 one :- bigfeh.com Message of the Day - 
+:bigfeh.com 372 one :- *** This is the short motd ***
+:bigfeh.com 376 one :End of /MOTD command.
+:one MODE one :+i
+NICK    
+:bigfeh.com 431 one :No nickname given
+NICK /
+:bigfeh.com 432 one / :Erroneous Nickname [N/A]
+NICK :
+:bigfeh.com 432 one  :Erroneous Nickname [N/A]
+NICK `   
+:one!~foo@c-67-190-127-60.hsd1.co.comcast.net NICK :`
+NICK grah
+:`!~foo@c-67-190-127-60.hsd1.co.comcast.net NICK :grah
+NICK nathan
+:bigfeh.com 433 grah nathan :Nickname is already in use.
+QUIT blah
+ERROR :Closing Link: c-67-190-127-60.hsd1.co.comcast.net (Quit: blah)
+Connection closed by foreign host.
+
+:bigfeh.com NOTICE AUTH :*** Looking up your hostname...
+:bigfeh.com NOTICE AUTH :*** Found your hostname, cached
+user foo * 0 :bar
+NICK nathan
+:bigfeh.com 433 * nathan :Nickname is already in use.

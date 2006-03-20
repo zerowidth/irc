@@ -21,7 +21,7 @@ class ClientTest < Test::Unit::TestCase
   end
   # same for PluginManager, for testing loading of the core plugin
   class IRC::PluginManager
-    attr_reader :plugins, :handlers
+    attr_reader :plugins
   end
   
   def setup
@@ -106,9 +106,14 @@ class ClientTest < Test::Unit::TestCase
     assert_equal 'QUIT :quitting', gets_from_server
   end
   
-  # TODO
-  def test_core_plugin_gets_loaded
-    
+  # this one is fun. when QuitCommand was being executed, it tells client to quit.
+  # before it sends any data, it kills the queue thread, which is what's executing
+  # the quit command... whoops!
+  def test_quit_command_sends_message
+    client_connect()
+    2.times { assert gets_from_server } # clear registration
+    @client.command_queue.add QuitCommand.new('reason')
+    assert_equal 'QUIT :reason', gets_from_server
   end
   
   # tests for refactoring -- changing start() from a blocking call to a nonblocking call,
@@ -157,6 +162,14 @@ class ClientTest < Test::Unit::TestCase
   def test_queue_config_state_command_execution
     client_connect()
     command_type_test(:uses_queue_config_state, @client.command_queue, @client.config, @client.state)
+  end
+  
+  # core plugin and other plugin loading tests
+
+  def test_core_plugin_registered
+    client_connect() # start everything up, so plugin manager is instantiated
+    assert @client.plugin_manager.plugins.size > 0, 'no plugins registered with plugin manager'
+    assert CorePlugin, @client.plugin_manager.plugins.first.class
   end
 
   # helpers ###########################

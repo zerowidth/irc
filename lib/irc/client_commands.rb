@@ -22,7 +22,6 @@ end
 # SendCommand: contains text data to send over the network
 class SendCommand < IRCCommand
   type :uses_socket
-  attr_reader :data # for easy access (not critical)
 
   def initialize(data)
     @data = data
@@ -74,8 +73,11 @@ class NickCommand < IRCCommand
   def execute(queue,config,state)
     queue.add SendCommand.new(CMD_NICK + ' ' + @nick)
     # save the new nick, but don't change the existing nick until the server
-    # sends a response back saying it was successful (this is handled elsewhere)
-    state[:newnick] = @nick 
+    # sends a response back saying it was successful (this is handled elsewhere).
+    # yes, this clobbers any existing newnick. if a nick command is executed several times
+    # in a row, the last one should apply to any "nick is OK" responses (also handled elsewhere)
+    state[:newnick] ||= []
+    state[:newnick] << @nick 
   end
 end
 

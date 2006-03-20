@@ -6,6 +6,11 @@ require 'stubs/command_queue_stub' # command queue stub
 require 'rubygems'
 require 'flexmock' # for generic mocks
 
+# reveal internals for easy testing
+class IRC::SendCommand
+  attr_reader :data
+end
+
 class BasicCommandTests < Test::Unit::TestCase
   include IRC
   
@@ -63,9 +68,12 @@ class BasicCommandTests < Test::Unit::TestCase
   def test_nick_command
     assert_equal :uses_queue_config_state, @nickcmd.type
     assert @cq.empty?
+    assert_equal nil, @state[:newnick]
     @nickcmd.execute(@cq,@config,@state)
     assert_equal SendCommand, @cq.queue[0].class
     assert_equal 'NICK newnick', @cq.queue[0].data
+    # make sure it saved the new nick by adding it to the new nick list
+    assert_equal ['newnick'], @state[:newnick]
   end
   
   def test_join_command

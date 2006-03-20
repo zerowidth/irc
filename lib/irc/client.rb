@@ -17,6 +17,7 @@ require 'irc/synchronized_hash'
 
 # plugins and dispatch
 require 'irc/plugin_manager'
+require 'irc/core_plugin' # registers core plugin for basic services
 
 module IRC
   
@@ -66,19 +67,22 @@ class Client
 
     # set flags
     @running = false
-    
+
     # tear everything down
-    @queue_thread.kill()
     @plugin_manager.teardown()
-    
+
     # let the server know why we left
     @connection.send("QUIT :#{reason}") if reason
-    
+
     @connection.disconnect()
 
     # free up the config for writing again
-    @config.writeable!
-    
+    @config.writeable!  
+      
+    # don't do this until the very end, since this is what's being waited on. ALSO:
+    # if this method is being called from a QuitCommand, this is running inside 
+    # queue_thread, and this kill, in effect, is committing suicide!
+    @queue_thread.kill()
   end
   
   def wait_for_quit
