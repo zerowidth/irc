@@ -71,6 +71,10 @@ class PluginManagerTest < Test::Unit::TestCase
     
   end
   
+  def teardown
+    PluginManager.reset_plugins
+  end
+  
   def test_registration
     # test that plugin registrations get stored in the class singleton
     assert_equal 0, PluginManager.plugins.size
@@ -168,6 +172,20 @@ class PluginManagerTest < Test::Unit::TestCase
     pm.dispatch(@general_server_message) # waits, but shouldn't ever execute if teardown is successful
     assert_equal 0, pm.threads.size # nothing should have been dispatched!
     t.join # finish up
+  end
+  
+  def test_load_plugins_from_dir
+    pm = PluginManager.new(nil,{:plugin_dir=>'test/fixtures'},nil)
+    # only the test plugin should be registered for RPL_TOPIC
+    assert_equal 1, pm.plugins.size, 'TestPlugin should have been registered'
+    assert_equal TestPlugin, pm.plugins.first.class
+    assert pm.handlers[RPL_TOPIC] # should be registered for this
+  end
+  
+  def test_load_plugins_from_invalid_dir
+    assert_raise(Errno::ENOENT) do
+      pm = PluginManager.new(nil,{:plugin_dir=>'invalid_directory'},nil)
+    end
   end
   
   ##### helpers

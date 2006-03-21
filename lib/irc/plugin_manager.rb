@@ -18,6 +18,7 @@ class PluginManager
   end
 
   def initialize(command_queue, config, state)
+
     super() # initialize monitor mixin
     
     # these might not need to be local
@@ -25,6 +26,15 @@ class PluginManager
     @config = config
     @state = state
     
+    # this is executed before instantiating anything, so all the plugins
+    # get a chance to register first.
+    # This code is in the constructor to allow for reloading of plugins
+    # in a convenient manner, and it also makes more sense for it to happen
+    # during instantiation than in a separate method.
+    # This method call will catch any exception thrown by the plugin while executing
+    # load() on each file, including syntax errors! test your code first!
+    load_plugins_from_dir(@config[:plugin_dir]) if @config && @config[:plugin_dir]
+
     @plugins = [] # list of plugins
     @handlers = {} # list of commands for which plugins are registered
     
@@ -86,6 +96,23 @@ class PluginManager
   end
   
   private #############################
+  
+  def load_plugins_from_dir(plugin_dir)
+    dir = File.expand_path(plugin_dir)
+    Dir.foreach(dir) do |entry| # not recursive!
+      filename = dir + '/' + entry
+      if File.file?(filename) && entry =~ /\.rb$/ # only load ruby files
+        begin 
+          load(filename)
+        rescue Exception => e # catch any exceptions, including syntax errors
+          # all exceptions are caught so reloading plugins won't cause the 
+          # client to crash.
+          # log exception here, eventually
+        end
+      end
+    end
+    
+  end
   
   # determine which method to call on the plugins
   def method_for(message_type)

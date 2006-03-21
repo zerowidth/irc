@@ -1,4 +1,5 @@
-# example config file for IRC::Client
+# example config file for IRC::Client.
+# syntax is YAML, config is a hash.
 --- 
 # connection options
 :host: server.com # this is required!
@@ -10,5 +11,9 @@
 :user: rubybot
 :realname: ruby irc bot
 
+# plugin options
+# this will load all plugins in the specified path (not recursive!)
+#:plugin_dir: 'path/to/plugins'
+
 # add your own config options here, they will be available at runtime to 
-# your plugins via @config
+# your plugins via @config.
