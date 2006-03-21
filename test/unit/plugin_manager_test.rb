@@ -71,10 +71,6 @@ class PluginManagerTest < Test::Unit::TestCase
     
   end
   
-  def teardown
-    PluginManager.reset_plugins
-  end
-  
   def test_registration
     # test that plugin registrations get stored in the class singleton
     assert_equal 0, PluginManager.plugins.size
