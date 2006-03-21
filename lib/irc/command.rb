@@ -33,7 +33,9 @@ class IRCCommand
   # Reimplement this method, this will get called when a command is processed
   # Depending on type, the args will be different things - see comments above 
   # for how types should be defined.
-  # TODO: better to just leave this undefined and let the parser handle it? PERHAPS!
+  # This raises an exception because if a command's execute isn't defined then
+  # it's an exceptional situation. This is a little more explicit than if the
+  # method weren't defined.
   def execute(*args); 
     raise "Command #{self.inspect} execution not defined"
   end

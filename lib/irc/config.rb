@@ -1,4 +1,4 @@
-#require 'yaml'
+require 'yaml'
 
 module IRC
   
@@ -31,9 +31,10 @@ module IRC
       
     }.freeze
     
-    def initialize
+    def initialize(configfile=nil)
       @config = CONFIG_DEFAULTS.dup # .dup or changing @config tries to change CONFIG_DEFAULTS
       @readonly = false # readonly locking, set by the client once things are "locked down"
+      load_from_file(configfile) if configfile
     end
 
     def [](key)
@@ -64,6 +65,14 @@ module IRC
       required = @config.find_all {|key, val| val == :required }
       raise ConfigOptionRequired, "Required settings: " + required.inspect + 
         required.map {|key, val| key }.join(', ') unless required.empty?
+    end
+    
+    private ############################
+    
+    def load_from_file(file)
+      # this throws an exception if the file doesn't exist
+      file_config = File.open( File.expand_path(file) ) {|f| YAML.load(f) }
+      @config.merge!(file_config)
     end
 
     class ConfigOptionRequired < RuntimeError; end

@@ -171,6 +171,14 @@ class ClientTest < Test::Unit::TestCase
     assert @client.plugin_manager.plugins.size > 0, 'no plugins registered with plugin manager'
     assert CorePlugin, @client.plugin_manager.plugins.first.class
   end
+  
+  # config load from file test, this is a refactoring to change Client.new to 
+  # accept a config filename as an optional parameter
+  
+  def test_client_loads_config_from_file
+    @client = Client.new('test/fixtures/config.yaml')
+    assert_equal 10000, @client.config[:port]
+  end
 
   # helpers ###########################
   def config_client

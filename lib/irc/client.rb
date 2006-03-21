@@ -25,11 +25,11 @@ class Client
   
   attr_reader :config # publically available for pre-run config (set to readonly when started)
   
-  def initialize
+  def initialize(configfile=nil)
     @command_queue = CommandQueue.new
     @queue_thread = nil # thread to handle emptying/processing the queue
 
-    @config = Config.new # this stays the same across all start() calls
+    @config = Config.new(configfile) # this stays the same across all start() calls
     @state = nil # initialized in start()
     
     @connection = nil

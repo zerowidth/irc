@@ -1,0 +1,14 @@
+# example config file for IRC::Client
+--- 
+# connection options
+:host: server.com # this is required!
+:retry_wait: 10 # how many seconds to wait before retrying after a disconnect
+:port: 6667
+
+# registration options
+:nick: rubybot
+:user: rubybot
+:realname: ruby irc bot
+
+# add your own config options here, they will be available at runtime to 
+# your plugins via @config

@@ -53,5 +53,18 @@ class ConfigTest < Test::Unit::TestCase
     @config.writeable!
     assert_false @config.readonly?
   end
-  
+
+  # don't need to test the default, which doesn't load from file. this is handled
+  # above in the defaults test.
+  def test_load_from_file
+    @config = Config.new('test/fixtures/config.yaml') # load from test config file
+    assert_equal 10000, @config[:port] # only entry in config file
+  end
+
+  def test_load_from_nonexistent_file
+    assert_raise(Errno::ENOENT) do
+      @config = Config.new('nonexistent-configfile.yaml')
+    end
+  end
+
 end
