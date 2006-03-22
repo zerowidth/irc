@@ -9,6 +9,9 @@ class PluginTest < Test::Unit::TestCase
   class TestPlugin < IRC::Plugin
     public :reply, :reply_command, :private_message?
   end
+  class IRC::SendCommand
+    attr_reader :data
+  end
   
   def setup 
     @cq = CommandQueueStub.new
@@ -43,6 +46,14 @@ class PluginTest < Test::Unit::TestCase
   def test_public_reply
     @plugin.reply(@public_privmsg, 'hello')
     assert_replied_with('PRIVMSG #chan :hello')
+  end
+  
+  # this is interesting: sometimes irc clients or the server don't match case for nicknames.
+  # make sure the reply code works with the nick being differently-cased from the actual nick.
+  def test_private_reply_case_insensitive
+    @state[:nick] = 'rBoT'
+    @plugin.reply(@private_privmsg,'hello')
+    assert_replied_with('PRIVMSG nathan :hello')
   end
   
   def test_reply_command
