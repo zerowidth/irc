@@ -22,6 +22,7 @@ class BasicCommandTests < Test::Unit::TestCase
     @nickcmd = NickCommand.new('newnick')
     @joincmd = JoinCommand.new('#channel')
     @partcmd = PartCommand.new('#channel')
+    @actioncmd = CTCPActionCommand.new('action!')
     
     # stubs:
     @cq = CommandQueueStub.new
@@ -82,6 +83,10 @@ class BasicCommandTests < Test::Unit::TestCase
   
   def test_part_command
     assert_command_sends @partcmd, 'PART #channel'
+  end
+  
+  def test_action_command
+    assert_command_sends @actioncmd, "\001action!\001"    
   end
 
   # helper to make testing of basic queue commands easier
