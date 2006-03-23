@@ -89,7 +89,7 @@ class PartCommand < IRCCommand
   queue_command CMD_PART
 end
 
-class CTCPActionCommand < IRCCommand
+class ActionCommand < IRCCommand
   type :uses_queue
   
   def initialize(action)

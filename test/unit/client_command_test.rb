@@ -22,7 +22,7 @@ class BasicCommandTests < Test::Unit::TestCase
     @nickcmd = NickCommand.new('newnick')
     @joincmd = JoinCommand.new('#channel')
     @partcmd = PartCommand.new('#channel')
-    @actioncmd = CTCPActionCommand.new('action!')
+    @actioncmd = ActionCommand.new('action!')
     
     # stubs:
     @cq = CommandQueueStub.new
