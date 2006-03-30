@@ -95,11 +95,12 @@ class PluginTest < Test::Unit::TestCase
   
   def test_action_command
     @plugin.reply_action(@plugin.who_sent?(@private_privmsg),'action!')
-    assert_replied_with("PRIVMSG nathan :\001action!\001")
+    assert_replied_with("PRIVMSG nathan :\001ACTION action!\001")
   end
   
   def test_action_command_to_chan
-    
+    @plugin.reply_action(@plugin.where_sent?(@public_privmsg), 'action!')
+    assert_replied_with("PRIVMSG #chan :\001ACTION action!\001")
   end
 
   # test helper

@@ -12,20 +12,20 @@ class BasicPlugin < Plugin
   def privmsg(msg)
     begin
       if private_message?(msg)
-        reply(msg, "what, talking to me in private? begone, coward.")
+        reply(who_sent?(msg), "what, talking to me in private? begone, coward.")
       else
         p msg.params[1]
         if msg.params[1] =~ %r{^#{@state[:nick]}(?:\S*\s+)(.*)?}
           case $1
           when /say\s+(.*)/
-            reply(msg, $1)
+            reply(where_sent?(msg), $1)
           when /do\s+(.*)/
-            reply_action(msg, $1)
+            reply_action(where_sent?(msg), $1)
           when /^quit\S*$/
-            reply(msg, "#{msg.prefix[:nick]}: but why?")
+            reply(where_sent?(msg), "#{msg.prefix[:nick]}: but why?")
           when /quit\s+(.*)/  
             @command_queue.add QuitCommand.new($1)
-          when /join\s+(#\S+)/
+          when /join\s+(#\S*)/
             @command_queue.add JoinCommand.new($1)
           when /part\s+(.*)/
             @command_queue.add PartCommand.new($1)

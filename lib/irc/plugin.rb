@@ -44,7 +44,7 @@ class Plugin
   # TODO: reply_in_private for private replies to public messages
   
   def reply_action(who, text)
-    send_command(CMD_PRIVMSG, "#{who} :\001#{text}\001")
+    send_command(CMD_PRIVMSG, "#{who} :\001ACTION #{text}\001")
   end
 
 
