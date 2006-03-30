@@ -89,17 +89,4 @@ class PartCommand < IRCCommand
   queue_command CMD_PART
 end
 
-class ActionCommand < IRCCommand
-  type :uses_queue
-  
-  def initialize(action)
-    @action = action
-  end
-  
-  def execute(queue)
-    queue.add SendCommand.new("\001#{@action}\001")    
-  end
-
-end
-
 end # module

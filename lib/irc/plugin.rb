@@ -33,23 +33,48 @@ class Plugin
   private #############################
   # helper methods:
 
-  def reply(msg,text)
-    who = private_message?(msg) ? msg.sender : msg.params[0]
-    reply_command(msg,CMD_PRIVMSG, "#{who} :#{text}")
+  def reply(text)
+    
   end
 
-  def reply_command(msg,command,param_string)
+  def reply(who, text)
+    send_command(CMD_PRIVMSG, "#{who} :#{text}")
+  end
+  
+  # TODO: reply_in_private for private replies to public messages
+  
+  def reply_action(who, text)
+    send_command(CMD_PRIVMSG, "#{who} :\001#{text}\001")
+  end
+
+
+  def send_command(command,param_string)
     @command_queue.add( SendCommand.new("#{command} #{param_string}") )
   end
+  
+  # query helpers, use these to ask simple questions about messages
 
+  def who_sent?(msg)
+    msg.sender
+  end
+  
+  def where_sent?(msg)
+    if directed_message?(msg)
+      private_message?(msg) ? @state[:nick] : msg.params[0]
+    else
+      @state[:nick]
+    end
+  end
+
+  # a message is considered private if it's directed to this particular client
+  # via a directed message (privmsg, notice)
   def private_message?(msg)
-    # check oldnick to be sure the nick isn't being changed at the moment
     directed_message?(msg) && msg.params && 
       ( @state[:nick] && msg.params[0].downcase == @state[:nick].downcase )
   end
   
-  # messages can only be considered "private" if they're directed to someone
-  # and match a particular type of message
+  # a directed message means it's a message specifically targeted to a nick or channel
+  # (that is, a privmsg or a notice)
   def directed_message?(msg)
     msg.message_type == CMD_PRIVMSG || msg.message_type == CMD_NOTICE
   end

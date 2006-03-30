@@ -18,7 +18,9 @@ class BasicPlugin < Plugin
         if msg.params[1] =~ %r{^#{@state[:nick]}(?:\S*\s+)(.*)?}
           case $1
           when /say\s+(.*)/
-            reply(msg, "#{$1}")
+            reply(msg, $1)
+          when /do\s+(.*)/
+            reply_action(msg, $1)
           when /^quit\S*$/
             reply(msg, "#{msg.prefix[:nick]}: but why?")
           when /quit\s+(.*)/  
