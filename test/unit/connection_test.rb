@@ -21,15 +21,15 @@ class ConnectionTest < Test::Unit::TestCase
   end
   
   def teardown
-    @conn.disconnect() if @conn.connected?
+    @conn.disconnect if @conn.connected?
     @client.close if @client && !@client.closed?
     @server.close if @server && !@server.closed?
   end
   
   # DRY for basic connection & data receiving
   def connect
-    t = Thread.new { @client = @server.accept() } # wait for a connection
-    @conn.start()
+    t = Thread.new { @client = @server.accept } # wait for a connection
+    @conn.start
     t.join(0.5) # with a timeout in case something goes wrong
   end
   def gets_from_server
@@ -44,28 +44,28 @@ class ConnectionTest < Test::Unit::TestCase
   def test_basic_connection
     
     # connect
-    connect()
+    connect
     assert @conn.connected?
     
-    # check that start() doesn't work twice
+    # check that start doesn't work twice
     assert_raises RuntimeError do
-      @conn.start()
+      @conn.start
     end
     
     # disconnect
-    @conn.disconnect()
+    @conn.disconnect
     assert_false @conn.connected?
     
     # check that disconnect doesn't work twice
     assert_raises RuntimeError do
-      @conn.disconnect()
+      @conn.disconnect
     end
   end
   
   # test that sending data to the connection results in a DataCommand object in the
   # (stub) CommandQueue
   def test_send_and_receive
-    connect()
+    connect
     
     # greeting from server
     assert_equal 0, @cq.queue.size
@@ -77,23 +77,23 @@ class ConnectionTest < Test::Unit::TestCase
     
     # reply to server
     @conn.send('greetings')
-    assert_equal 'greetings', gets_from_server()
+    assert_equal 'greetings', gets_from_server
     
   end
   
   def test_reconnect
-    connect()
+    connect
     assert @conn.connected?
     
     # make sure it's working
     @conn.send('hello')
-    assert 'hello', gets_from_server()
+    assert 'hello', gets_from_server
 
     # kill the server-side connection
-    @client.close()
+    @client.close
     
     # wait for the reconnect
-    t = Thread.new { @client = @server.accept() } # wait for another connection
+    t = Thread.new { @client = @server.accept } # wait for another connection
     t.join(RETRY_WAIT*2) # wait for twice the retry interval
     
     assert_false @client.closed?
@@ -101,7 +101,7 @@ class ConnectionTest < Test::Unit::TestCase
 
     # make sure it works again
     @conn.send('hello')
-    assert_equal 'hello', gets_from_server()   
+    assert_equal 'hello', gets_from_server   
     
   end
   

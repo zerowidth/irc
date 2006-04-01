@@ -13,22 +13,22 @@ class CommandQueueTest < Test::Unit::TestCase
     @cq.add(:foo)
     assert_false @cq.empty?
     @cq.add(:bar)
-    foo = @cq.dequeue()
+    foo = @cq.dequeue
     assert_equal :foo, foo
     @cq.add(:baz)
-    bar = @cq.dequeue()
+    bar = @cq.dequeue
     assert_equal :bar, bar
-    baz = @cq.dequeue()
+    baz = @cq.dequeue
     assert_equal :baz, baz
     assert @cq.empty?    
   end
   
   def test_condition_variable_waiting
     # a little more complicated: test how the dequeue waiting works
-    # this told me how the client is going to have to handle the dequeue() calls
+    # this told me how the client is going to have to handle the dequeue calls
     # since it's completely blocking, with no timeouts.
     data = nil # set scope for data
-    t = Thread.new { data = @cq.dequeue() } # should be a blocking call!
+    t = Thread.new { data = @cq.dequeue } # should be a blocking call!
     assert_equal nil, data # shouldn't be set yet
     assert t.alive?
     @cq.add(:data) # throw something on the queue

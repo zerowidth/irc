@@ -29,8 +29,8 @@ class Client
     @command_queue = CommandQueue.new
     @queue_thread = nil # thread to handle emptying/processing the queue
 
-    @config = Config.new(configfile) # this stays the same across all start() calls
-    @state = nil # initialized in start()
+    @config = Config.new(configfile) # this stays the same across all start calls
+    @state = nil # initialized in start
     
     @connection = nil
 
@@ -41,16 +41,16 @@ class Client
   
   def start
     raise 'client already running' if @running
-    @config.exception_unless_configured() # raises exceptions if configuration is insufficient
+    @config.exception_unless_configured # raises exceptions if configuration is insufficient
     
-    # instantiate these here instead of in the constructor so start() can be called
+    # instantiate these here instead of in the constructor so start can be called
     # multiple times -- can now stop and start the client as requested
     @state = SynchronizedHash.new
     @plugin_manager = PluginManager.new(@command_queue, @config, @state)
 
     @config.readonly! # no more changes!
     @connection = IRCConnection.new(@config[:host], @config[:port], @command_queue)
-    @connection.start() # won't return until connection is made
+    @connection.start # won't return until connection is made
 
     # ok, everything's good. set the running flag and enter the queue processing loop
     @running = true
@@ -58,23 +58,23 @@ class Client
     # register with the irc server
     @command_queue.add( RegisterCommand.new(@config[:nick], @config[:user], @config[:realname]) )
  
-    start_queue_handler()
+    start_queue_handler
   end
 
   def quit(reason=nil)
-    # prevent quit() being called twice
+    # prevent quit being called twice
     raise 'client already exited' unless @running
 
     # set flags
     @running = false
 
     # tear everything down
-    @plugin_manager.teardown()
+    @plugin_manager.teardown
 
     # let the server know why we left
     @connection.send("QUIT :#{reason}") if reason
 
-    @connection.disconnect()
+    @connection.disconnect
 
     # free up the config for writing again
     @config.writeable!  
@@ -82,7 +82,7 @@ class Client
     # don't do this until the very end, since this is what's being waited on. ALSO:
     # if this method is being called from a QuitCommand, this is running inside 
     # queue_thread, and this kill, in effect, is committing suicide!
-    @queue_thread.kill()
+    @queue_thread.kill
   end
   
   def wait_for_quit
@@ -93,7 +93,7 @@ class Client
   
   def start_queue_handler
     @queue_thread = Thread.new do
-      queue_loop()
+      queue_loop
     end
   end
 
@@ -103,9 +103,9 @@ class Client
     # stopped after only one dequeue by setting the quit flag so it exits immediately.
     # this speeds up testing, so until @quit it is!
     until @quit do
-      command = @command_queue.dequeue()
+      command = @command_queue.dequeue
       case command.type
-      # very few plugins will do this, and then only to call quit().
+      # very few plugins will do this, and then only to call quit.
       # everything else should be handled through the queue
       # quit is done via the client, since the client quit method sends out 
       # a QUIT command to the server.

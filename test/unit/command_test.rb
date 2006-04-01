@@ -19,7 +19,7 @@ class CommandTest < Test::Unit::TestCase
       abstract_command.type
     end
     assert_raises RuntimeError do
-      abstract_command.execute()
+      abstract_command.execute
     end
   end
   

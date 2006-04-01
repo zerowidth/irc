@@ -3,7 +3,7 @@
 # to the socket, etc.
 
 # To use IRCConnection, instantiate it with the host and port, and then
-# call start(). This will begin the internal data processing thread that
+# call start. This will begin the internal data processing thread that
 # connects to the server, receives data, and handles reconnects
 
 require 'socket'
@@ -26,16 +26,16 @@ class IRCConnection
     @disconnect = false # flag for connection thread loops
   end
   
-  def start()
-    # connect() is called within the main loop, but it's called here as well
+  def start
+    # connect is called within the main loop, but it's called here as well
     # to gather any network errors or other exceptions that might occur
-    connect()
+    connect
     # start main loop
-    start_main_loop()
+    start_main_loop
   end
   
   # disconnect will interrupt a current connection or disconnect loop
-  def disconnect()
+  def disconnect
     raise "already disconnected" unless connected?
     @disconnect = true; # set the flag
     @socket.close # then kill the connection
@@ -50,7 +50,7 @@ class IRCConnection
     @socket.puts data
   end
   
-  def connected?()
+  def connected?
     @socket && !@socket.closed?
   end
   
@@ -64,7 +64,7 @@ class IRCConnection
   def start_main_loop
     @disconnect = false
     @connection_thread = Thread.new do
-      socket_main_loop()
+      socket_main_loop
     end # thread
     @connection_thread.join(0.01) # check for uncaught exceptions during startup
   end
@@ -72,8 +72,8 @@ class IRCConnection
   def socket_main_loop
     until @disconnect do
       begin
-        # connect (unless already connected, which is the case if #start() is called)
-        connect() unless connected?
+        # connect (unless already connected, which is the case if #start is called)
+        connect unless connected?
       
         # loop on the socket, catch a disconnection event
         # two ways things could go:
@@ -93,11 +93,11 @@ class IRCConnection
         end # loop
       
         # wait for the reconnect
-        sleep_for_retry()
+        sleep_for_retry
 
       rescue SystemCallError, IOError => e # socket exceptions or network errors
 #          puts "connection error: #{e}, retrying in #{@retry_wait} seconds"
-        sleep_for_retry()
+        sleep_for_retry
       ensure
         @socket.close if connected?
       end

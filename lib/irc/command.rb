@@ -19,7 +19,7 @@ queue (such as NICK, JOIN, PART) there is a queue_command "macro" that makes it 
   end
 
 IRCCommands rely on someone else to provide the necessary and correct
-arguments to their execute() methods: this is assisted by the #type method.
+arguments to their execute methods: this is assisted by the #type method.
 
 =end
 
@@ -50,7 +50,7 @@ end
 # Metaprogramming for "type :foo" and queue_command CMD_WHATEV
 class << IRCCommand
   def type(type)
-    # redefine #type() to return the type (as a symbol)
+    # redefine #type to return the type (as a symbol)
     class_eval %{ def type; :#{type}; end }
   end
   

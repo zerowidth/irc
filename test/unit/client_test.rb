@@ -48,59 +48,59 @@ class ClientTest < Test::Unit::TestCase
   
   def test_config_required_before_start
     assert_raise Config::ConfigOptionRequired do
-      @client.start()
+      @client.start
     end
   end
   
   def test_config_readonly_while_running
     assert_false @client.config.readonly?
-    config_client()
-    @client.start()
+    config_client
+    @client.start
     assert @client.config.readonly?, "config should be readonly"
-    @client.quit()
+    @client.quit
     assert_false @client.config.readonly?, "config should be writeable"
   end
   
   def test_cant_start_client_twice
-    config_client()
+    config_client
     @client.start
     assert_raise RuntimeError do
-      @client.start()
+      @client.start
     end
   end
   
   def test_cant_stop_client_twice
-    config_client()
-    @client.start()
-    @client.quit() # first quit
+    config_client
+    @client.start
+    @client.quit # first quit
     assert_raise RuntimeError do
-      @client.quit() # second quit
+      @client.quit # second quit
     end
   end
   
   def test_connection
-    client_connect()
+    client_connect
     assert @serverclient, "client should have connected, but didn't"
     assert @client.connection.connected?, "client should be connected"
   end
   
   def test_client_can_connect_twice
-    client_connect()
-    @client.quit()
+    client_connect
+    @client.quit
     # make sure it's quit
     assert_false @client.connection.connected?, 'client should have disconnected'
     # now make sure the client can connect a second time
-    test_connection()
+    test_connection
   end
     
   def test_register_on_connect
-    client_connect()
+    client_connect
     assert_equal 'USER user 0 * :realname', gets_from_server
     assert_equal 'NICK nick', gets_from_server
   end
 
   def test_quit_sends_quit_message
-    client_connect()
+    client_connect
     2.times { assert gets_from_server } # clear the registration out of the way
     @client.quit('quitting')
     assert_equal 'QUIT :quitting', gets_from_server
@@ -110,28 +110,28 @@ class ClientTest < Test::Unit::TestCase
   # before it sends any data, it kills the queue thread, which is what's executing
   # the quit command... whoops!
   def test_quit_command_sends_message
-    client_connect()
+    client_connect
     2.times { assert gets_from_server } # clear registration
     @client.command_queue.add QuitCommand.new('reason')
     assert_equal 'QUIT :reason', gets_from_server
   end
   
-  # tests for refactoring -- changing start() from a blocking call to a nonblocking call,
-  # and adding the #wait_for_quit() method
+  # tests for refactoring -- changing start from a blocking call to a nonblocking call,
+  # and adding the #wait_for_quit method
   def test_start_returns
-    config_client()
-    t = Thread.new { @client.start() }
+    config_client
+    t = Thread.new { @client.start }
     t.join(0.5) # give it half a second
     assert_false t.alive? # thread should be dead!
   end
   
   def test_wait_for_quit
-    config_client()
-    @client.start()
-    t = Thread.new { @client.wait_for_quit() }
+    config_client
+    @client.start
+    t = Thread.new { @client.wait_for_quit }
     t.join(0.01) # catch exceptions
     assert t.alive?
-    @client.quit()
+    @client.quit
     t.join(0.5) # wait for quit, this should return and the thread should die
     assert_false t.alive?, 'client wait should have returned'
   end
@@ -140,34 +140,34 @@ class ClientTest < Test::Unit::TestCase
   # This tests that the client grabs the commands off the queue and that they
   # also get executed correctly.
   def test_client_command_execution
-    client_connect()
+    client_connect
     command_type_test(:uses_client, @client)
   end
   
   def test_socket_command_execution
-    client_connect()
+    client_connect
     command_type_test(:uses_socket, @client.connection)
   end
   
   def test_plugins_command_execution
-    client_connect()
+    client_connect
     command_type_test(:uses_plugins, @client.plugin_manager)
   end
   
   def test_queue_command_execution
-    client_connect()
+    client_connect
     command_type_test(:uses_queue, @client.command_queue)
   end
   
   def test_queue_config_state_command_execution
-    client_connect()
+    client_connect
     command_type_test(:uses_queue_config_state, @client.command_queue, @client.config, @client.state)
   end
   
   # core plugin and other plugin loading tests
 
   def test_core_plugin_registered
-    client_connect() # start everything up, so plugin manager is instantiated
+    client_connect # start everything up, so plugin manager is instantiated
     assert @client.plugin_manager.plugins.size > 0, 'no plugins registered with plugin manager'
     assert CorePlugin, @client.plugin_manager.plugins.first.class
   end
@@ -188,9 +188,9 @@ class ClientTest < Test::Unit::TestCase
   end
   
   def client_connect
-    config_client()
-    t = Thread.new { @serverclient = @server.accept() } # wait for a connection
-    @client.start()
+    config_client
+    t = Thread.new { @serverclient = @server.accept } # wait for a connection
+    @client.start
     t.join(0.5) # with a timeout in case something goes wrong
   end
   
@@ -201,7 +201,7 @@ class ClientTest < Test::Unit::TestCase
     data
   end
   
-  # tests that a command of type command_type has execute() invoked with execute_called_with
+  # tests that a command of type command_type has execute invoked with execute_called_with
   def command_type_test(command_type, *execute_called_with)
     # this might be a race condition, the queue thread might not have checked @quit already.
     # If this whole test fails, check that the queue thread isn't dead yet
@@ -210,7 +210,7 @@ class ClientTest < Test::Unit::TestCase
     
     # there's also another race condition here, one involving scheduling. even if the above
     # is successful, it's possible that the queue thread quits out before anything
-    # is added to the command queue. if this happens, the .type() call will not be called.
+    # is added to the command queue. if this happens, the .type call will not be called.
 
     CommandMock.use('mock command') do |cmd|
       # make sure the command is executed with the correct arguments

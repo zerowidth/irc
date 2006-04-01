@@ -32,14 +32,14 @@ class PluginManager
     # in a convenient manner, and it also makes more sense for it to happen
     # during instantiation than in a separate method.
     # This method call will catch any exception thrown by the plugin while executing
-    # load() on each file, including syntax errors! test your code first!
+    # load on each file, including syntax errors! test your code first!
     load_plugins_from_dir(@config[:plugin_dir]) if @config && @config[:plugin_dir]
 
     @plugins = [] # list of plugins
     @handlers = {} # list of commands for which plugins are registered
     
     @threads = [] # list of threads - run by dispatch, cleaned up by janitor thread
-    @janitor = Thread.new { janitor_loop() }
+    @janitor = Thread.new { janitor_loop }
     
     # this "freezes" the state of the class variable @@plugins by instantiating everything
     @@plugins ||= {} # just in case
@@ -57,7 +57,7 @@ class PluginManager
   end
   
   def dispatch(message)
-    synchronize do # see teardown()
+    synchronize do # see teardown
       type = message.message_type
       method_name = method_for(type)
     
@@ -122,7 +122,7 @@ class PluginManager
     type
   end
   
-  def janitor_loop()
+  def janitor_loop
     loop do
       
       # join up with threads temporarily so exceptions get logged

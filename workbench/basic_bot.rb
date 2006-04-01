@@ -47,8 +47,8 @@ c.config[:nick] = 'bb'
 c.config[:username] = 'basicbot'
 c.config[:realname] = 'basic irc bot'
 
-c.start()
+c.start
 
 trap('INT') { c.quit('caught ctrl+c') }
 
-c.wait_for_quit()
+c.wait_for_quit

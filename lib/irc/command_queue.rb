@@ -8,7 +8,7 @@ require 'thread' # has Mutex, etc.
 module IRC
 
 class CommandQueue
-  def initialize()
+  def initialize
     @q     = []
     @mutex = Mutex.new
     @cond  = ConditionVariable.new
@@ -22,7 +22,7 @@ class CommandQueue
     end
   end
 
-  def dequeue()
+  def dequeue
     @dequeue_mutex.synchronize do
       @mutex.synchronize do
         @cond.wait(@mutex) while @q.empty?
@@ -31,7 +31,7 @@ class CommandQueue
     end
   end
 
-  def empty?()
+  def empty?
     @mutex.synchronize do
       return @q.empty?
     end
