@@ -11,7 +11,7 @@ class MessageTest < Test::Unit::TestCase
   end
   
   def test_parsing_from_person
-    msg = Message.new(@private_privmsg)
+    msg = Message.parse(@private_privmsg)
     assert_equal(@private_privmsg, msg.raw_message)
     assert_equal CMD_PRIVMSG, msg.message_type
     assert_equal ['rbot', "hello there!"], msg.params
@@ -22,7 +22,7 @@ class MessageTest < Test::Unit::TestCase
   end
   
   def test_parsing_from_server
-    msg = Message.new(@general_server_message)
+    msg = Message.parse(@general_server_message)
     assert_equal @general_server_message, msg.raw_message
     assert_equal ['rbot', 'Welcome to the network: dude!'], msg.params 
     assert_equal 'server.com', msg.prefix[:server]
@@ -35,7 +35,7 @@ class MessageTest < Test::Unit::TestCase
   
   # test parsing for weird PING messages
   def test_parse_without_server
-    msg = Message.new(@server_ping_message)
+    msg = Message.parse(@server_ping_message)
     assert_nil msg.prefix[:server]
     assert_equal 'server.com', msg.params[0]
     assert_equal 'server.com', msg.sender

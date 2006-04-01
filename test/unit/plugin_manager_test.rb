@@ -65,8 +65,8 @@ class PluginManagerTest < Test::Unit::TestCase
     CallRecorderPlugin.reset_count
     PluginManager.reset_plugins
     
-    @private_privmsg = Message.new ':nathan!~nathan@subdomain.domain.net PRIVMSG rbot :hello there!'
-    @general_server_message = Message.new ':server.com 001 rbot :Welcome to the network: dude!'
+    @private_privmsg = Message.parse ':nathan!~nathan@subdomain.domain.net PRIVMSG rbot :hello there!'
+    @general_server_message = Message.parse ':server.com 001 rbot :Welcome to the network: dude!'
     
   end
   

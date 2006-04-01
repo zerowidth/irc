@@ -9,40 +9,37 @@ module IRC
     attr_reader :prefix # hash of :nick, :user, :host, :server
     attr_reader :params # broken up into an array based on the command
     attr_reader :sender # who sent the message
-    attr_reader :receiver # who the message was addressed to
     attr_reader :message_type # CMD_*, RPL_*, etc.
     
     attr_reader :raw_message # raw message text, useful for debugging or advanced parsing (heh)
     
-    def initialize(data)
-#      @client = client
-      @prefix = {}
-      @params = []
-      @sender = @message_type = nil
-      @raw_message = data
-      parse_message(data)
+    def initialize(prefix,params,sender,message_type,raw_message)
+      @prefix, @params, @sender, @message_type, @raw_message =
+        prefix, params, sender, message_type, raw_message
     end
-
-    private # --------------------------------------------------
-
-    def parse_message(data)
-
+    
+    def self.parse(data)
+      prefix = {}
+      params = []
+      sender = message_type = nil
+      raw_message = data
+    
       case data
       when /^:(\S+)\s(\S+)\s(.*)$/
-        prefix, type, message = $~.captures
+        prefix_data, message_type, message = $~.captures
       when /^([^:]\S+)\s(.*)$/
-        type, message = $~.captures
+        message_type, message = $~.captures
       else
-        puts "could not parse: #{data}" 
+        # log error "could not parse: #{data}" 
         return
       end
 
       # parse the prefix. if it doesn't fall into these two categories, then
       # leave the prefix empty (this can happen!)
-      if prefix =~ /^[^@]+$/ # just the server
-        @prefix[:server] = prefix
-      elsif prefix =~ /^(\S+)!(\S+)@(\S+)$/
-        @prefix[:nick], @prefix[:user], @prefix[:host] = $~.captures        
+      if prefix_data =~ /^[^@]+$/ # just the server
+        prefix[:server] = prefix_data
+      elsif prefix_data =~ /^(\S+)!(\S+)@(\S+)$/
+        prefix[:nick], prefix[:user], prefix[:host] = $~.captures        
       end
       
       # that first bit of code acts as a basic (basic!) "correctness" test
@@ -51,16 +48,13 @@ module IRC
       # split up the message around the :
       params, message = message.split(':',2)
       params = params.split(/\s+/)
-      @params << params << message
-      @params.flatten! # params is an array, so flatten it after it's added
+      params << message
       
       # this handles both normal messages and direct command messages from the server
-      @sender = @prefix[:server] ? @prefix[:server] : 
-        ( @prefix[:nick] ? @prefix[:nick] : @params[0] )
-
-      @message_type = type
+      sender = prefix[:server] ? prefix[:server] : 
+        ( prefix[:nick] ? prefix[:nick] : params[0] )
       
+      Message.new(prefix,params,sender,message_type,raw_message)
     end
-
-  end
+  end # class
 end

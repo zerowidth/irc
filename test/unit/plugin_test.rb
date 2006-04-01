@@ -24,12 +24,12 @@ class PluginTest < Test::Unit::TestCase
     @plugin = TestPlugin.new(@cq, @config, @state)
     
     # test messages:
-    @private_privmsg = Message.new ':nathan!~nathan@subdomain.domain.net PRIVMSG rbot :hello there!'
-    @public_privmsg = Message.new ':nathan!~nathan@subdomain.domain.net PRIVMSG #chan :hello there!'
-    @private_notice = Message.new ':nathan!~nathan@subdomain.domain.net NOTICE rbot :hello there!'
-    @public_notice = Message.new ':nathan!~nathan@subdomain.domain.net NOTICE #chan :hello there!'
-    @general_server_message = Message.new ':server.com 001 rbot :Welcome to the network: dude!'
-    @ping_message = Message.new 'PING :server.com'
+    @private_privmsg = Message.parse ':nathan!~nathan@subdomain.domain.net PRIVMSG rbot :hello there!'
+    @public_privmsg = Message.parse ':nathan!~nathan@subdomain.domain.net PRIVMSG #chan :hello there!'
+    @private_notice = Message.parse ':nathan!~nathan@subdomain.domain.net NOTICE rbot :hello there!'
+    @public_notice = Message.parse ':nathan!~nathan@subdomain.domain.net NOTICE #chan :hello there!'
+    @general_server_message = Message.parse ':server.com 001 rbot :Welcome to the network: dude!'
+    @ping_message = Message.parse 'PING :server.com'
   end
   
   # test the message query helpers

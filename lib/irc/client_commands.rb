@@ -13,7 +13,7 @@ class DataCommand < IRCCommand
   end
   
   def execute(plugin_handler)
-    msg = Message.new(@data)
+    msg = Message.parse(@data)
     plugin_handler.dispatch(msg)
   end
   

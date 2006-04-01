@@ -23,17 +23,17 @@ class CorePluginTest < Test::Unit::TestCase
     
     @plugin = CorePlugin.new(@cq,@config,@state)
     
-    @msg_welcome = Message.new('001 :Welcome to the network')
-    @msg_change_own_nick = Message.new(':nick!~user@server.com NICK :newnick')
-    @msg_other_nick_change = Message.new(':somenick!~someuser@server.com NICK :somenick2')
-    @msg_nick_in_use = Message.new(':server.com 433 nick newnick :Nickname already in use')
-    @msg_nick_in_use_during_registration = Message.new(':server.com 433 * nick :Nickname already in use')
-    @msg_invalid_nick = Message.new(':server.com 432 nick / :Erroneous Nickname')
+    @msg_welcome = Message.parse('001 :Welcome to the network')
+    @msg_change_own_nick = Message.parse(':nick!~user@server.com NICK :newnick')
+    @msg_other_nick_change = Message.parse(':somenick!~someuser@server.com NICK :somenick2')
+    @msg_nick_in_use = Message.parse(':server.com 433 nick newnick :Nickname already in use')
+    @msg_nick_in_use_during_registration = Message.parse(':server.com 433 * nick :Nickname already in use')
+    @msg_invalid_nick = Message.parse(':server.com 432 nick / :Erroneous Nickname')
     # colon gets parsed out by server (depends on ircd?), so the message is weird
-    @msg_invalid_nick_colon = Message.new(':server.come 432 nick  :Erroneous Nickname')
+    @msg_invalid_nick_colon = Message.parse(':server.come 432 nick  :Erroneous Nickname')
     # these two errors comply with RFC, unlike the ircd i tested this with
-    @msg_nick_in_use_rfc = Message.new(':server.com 433 newnick :Nickname already in use')
-    @msg_invalid_nick_rfc = Message.new(':server.com 432 / :Erroneus Nickname')
+    @msg_nick_in_use_rfc = Message.parse(':server.com 433 newnick :Nickname already in use')
+    @msg_invalid_nick_rfc = Message.parse(':server.com 432 / :Erroneus Nickname')
     
   end
   
