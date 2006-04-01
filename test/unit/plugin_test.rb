@@ -8,7 +8,7 @@ class PluginTest < Test::Unit::TestCase
   # there's not much to test here, except for helper methods... make 'em public!
   class IRC::Plugin
     public :reply, :send_command, :reply_action
-    public :directed_message?, :private_message?, :who_sent?, :where_sent?
+    public :directed_message?, :private_message?, :destination_of
   end
   # test plugin, does nothing (on purpose)
   class TestPlugin < IRC::Plugin
@@ -52,31 +52,21 @@ class PluginTest < Test::Unit::TestCase
     assert_false @plugin.private_message?(@ping_message)
   end
   
-  def test_who_sent
-    # privmsg and notices are the easy case
-    [@private_privmsg, @public_privmsg, @private_notice, @public_notice].each do |msg|
-      assert_equal( 'nathan', @plugin.who_sent?( msg ) )
-    end
-    # general messages
-    assert_equal( 'server.com', @plugin.who_sent?( @general_server_message ) )
-    assert_equal( 'server.com', @plugin.who_sent?( @ping_message ) )
-  end
-  
-  def test_where_sent
-    assert_equal 'rbot', @plugin.where_sent?(@private_privmsg)
-    assert_equal '#chan', @plugin.where_sent?(@public_privmsg)
-    assert_equal 'rbot', @plugin.where_sent?(@general_server_message)
+  def test_destination_of
+    assert_equal 'rbot', @plugin.destination_of(@private_privmsg)
+    assert_equal '#chan', @plugin.destination_of(@public_privmsg)
+    assert_equal 'rbot', @plugin.destination_of(@general_server_message)
   end
   
   # test the reply/send helpers
   
   def test_private_reply
-    @plugin.reply(@plugin.who_sent?( @private_privmsg ), 'hello')
+    @plugin.reply(@private_privmsg.sender, 'hello')
     assert_replied_with('PRIVMSG nathan :hello')
   end
   
   def test_public_reply
-    @plugin.reply(@plugin.where_sent?(@public_privmsg), 'hello')
+    @plugin.reply(@plugin.destination_of(@public_privmsg), 'hello')
     assert_replied_with('PRIVMSG #chan :hello')
   end
   
@@ -84,7 +74,7 @@ class PluginTest < Test::Unit::TestCase
   # make sure the reply code works with the nick being differently-cased from the actual nick.
   def test_private_reply_case_insensitive
     @state[:nick] = 'rBoT'
-    @plugin.reply(@plugin.who_sent?(@private_privmsg),'hello')
+    @plugin.reply(@private_privmsg.sender,'hello')
     assert_replied_with('PRIVMSG nathan :hello')
   end
   
@@ -94,12 +84,12 @@ class PluginTest < Test::Unit::TestCase
   end
   
   def test_action_command
-    @plugin.reply_action(@plugin.who_sent?(@private_privmsg),'action!')
+    @plugin.reply_action(@private_privmsg.sender,'action!')
     assert_replied_with("PRIVMSG nathan :\001ACTION action!\001")
   end
   
   def test_action_command_to_chan
-    @plugin.reply_action(@plugin.where_sent?(@public_privmsg), 'action!')
+    @plugin.reply_action(@plugin.destination_of(@public_privmsg), 'action!')
     assert_replied_with("PRIVMSG #chan :\001ACTION action!\001")
   end
 

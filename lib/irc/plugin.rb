@@ -52,13 +52,8 @@ class Plugin
     @command_queue.add( SendCommand.new("#{command} #{param_string}") )
   end
   
-  # query helpers, use these to ask simple questions about messages
-
-  def who_sent?(msg)
-    msg.sender
-  end
-  
-  def where_sent?(msg)
+  # query helpers, use these to ask simple questions about messages  
+  def destination_of(msg)
     if directed_message?(msg)
       private_message?(msg) ? @state[:nick] : msg.params[0]
     else
