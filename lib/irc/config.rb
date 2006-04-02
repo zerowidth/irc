@@ -4,11 +4,9 @@ module IRC
   
   class Config
     
-    # Config holds pre-runtime (host, port) and runtime (nick, channels) for an irc bot.
-    # All config options can be changed at runtime. This may or may not be a good idea
-    # and it may or may not affect the current state of the running bot. Be careful.
-    # I don't recomment futzing with @client.config from inside plugins unless you
-    # know what you're doing!
+    # Config holds pre-runtime (host, port) configuration for the irc client.
+    # Config is frozen while the bot is running to prevent changes. Runtime state is stored
+    # elsewhere (state hash)
     
     # if a default is set to :required, it needs to be set before things work
     # don't put an array in here, plz, since when that gets modified, so does
@@ -27,7 +25,7 @@ module IRC
       :retry_wait => 10, # seconds before retrying a connection
       
       # plugins
-#      :plugin_dir => File.basename(File.dirname(__FILE__) + 'plugins'),
+#      :plugin_dir => File.basename(File.dirname(__FILE__) + 'plugins')
       
     }.freeze
     
