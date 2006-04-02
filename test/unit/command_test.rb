@@ -35,7 +35,7 @@ class CommandTest < Test::Unit::TestCase
     end
     command_queue = CommandQueueStub.new
     qc = TestMetaprogrammedQueueCommand.new('data')
-    assert qc.is_a? QueueCommand
+    assert qc.is_a?(QueueCommand)
     assert_equal 1, qc.method(:execute).arity
     assert command_queue.empty?
     qc.execute(command_queue)

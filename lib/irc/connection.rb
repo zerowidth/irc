@@ -8,12 +8,15 @@
 
 require 'socket'
 require 'irc/client_commands' # need DataCommand
+require 'irc/cattr_accessor'
 
 module IRC
   
 class IRCConnection
   
   SOCKET_READY_WAIT = 0.5 # polling wait time for socket, set to nil for infinite
+  
+  cattr_accessor :logger
   
   def initialize(host, port, command_queue, retry_wait=10)
     @host = host
@@ -47,6 +50,7 @@ class IRCConnection
   # send data to the socket
   def send(data)
     raise "not connected" unless connected?
+    logger.info "<-- " + data.inspect
     @socket.puts data
   end
   
@@ -96,8 +100,10 @@ class IRCConnection
         sleep_for_retry
 
       rescue SystemCallError, IOError => e # socket exceptions or network errors
-#          puts "connection error: #{e}, retrying in #{@retry_wait} seconds"
-        sleep_for_retry
+        unless @disconnect
+          logger.warn "connection error: #{e}, retrying in #{@retry_wait} seconds"
+          sleep_for_retry
+        end
       ensure
         @socket.close if connected?
       end
@@ -109,7 +115,7 @@ class IRCConnection
   end
 
   def handle_data(data)
-#    puts "--> #{data.inspect}"
+    logger.info "--> " + data.inspect
     @command_queue.add(DataCommand.new(data))
   end
   

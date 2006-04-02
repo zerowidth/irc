@@ -19,13 +19,27 @@ require 'irc/synchronized_hash'
 require 'irc/plugin_manager'
 require 'irc/core_plugin' # registers core plugin for basic services
 
+# logging
+require 'irc/cattr_accessor'
+require 'logger'
+
 module IRC
   
+  DEFAULT_LOG_LEVEL = :info
+
 class Client
   
   attr_reader :config # publically available for pre-run config (set to readonly when started)
+  attr_accessor :logger
   
   def initialize(configfile=nil)
+    # initialize logging
+    @logger = Logger.new(STDOUT) # TODO: make this more flexible
+    [Message, IRCConnection, PluginManager].each do |klass|
+      klass.logger ||= @logger
+    end
+    @logger.level = Logger.const_get(DEFAULT_LOG_LEVEL.to_s.upcase)
+
     @command_queue = CommandQueue.new
     @queue_thread = nil # thread to handle emptying/processing the queue
 
@@ -42,6 +56,8 @@ class Client
   def start
     raise 'client already running' if @running
     @config.exception_unless_configured # raises exceptions if configuration is insufficient
+    
+    logger.info "starting client"
     
     # instantiate these here instead of in the constructor so start can be called
     # multiple times -- can now stop and start the client as requested
@@ -64,6 +80,8 @@ class Client
   def quit(reason=nil)
     # prevent quit being called twice
     raise 'client already exited' unless @running
+
+    logger.info "client quitting"
 
     # set flags
     @running = false

@@ -29,6 +29,10 @@ class BasicPlugin < Plugin
             @command_queue.add JoinCommand.new($1)
           when /part\s+(.*)/
             @command_queue.add PartCommand.new($1)
+          when /nick\s+(.*)/
+            @command_queue.add NickCommand.new($1)
+          when /help/
+            reply(destination_of(msg), "things i can do: say, do, join, part, quit, help")
           else
             reply(msg, "#{msg.prefix[:nick]}: what?")
           end

@@ -1,9 +1,11 @@
 require 'irc/rfc2812'
+require 'irc/cattr_accessor'
 
 module IRC
   class Message
     include IRC # for command consts
-#    attr_reader :client # irc client that sent this message, use for replies &c
+
+    cattr_accessor :logger
 
     # message parts
     attr_reader :prefix # hash of :nick, :user, :host, :server
@@ -30,7 +32,7 @@ module IRC
       when /^([^:]\S+)\s(.*)$/
         message_type, message = $~.captures
       else
-        # log error "could not parse: #{data}" 
+        logger.warn "could not parse: #{data}" 
         return
       end
 

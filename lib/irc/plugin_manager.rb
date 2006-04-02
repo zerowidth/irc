@@ -1,4 +1,5 @@
 require 'irc/plugin'
+require 'irc/cattr_accessor'
 require 'monitor'
 
 module IRC
@@ -6,6 +7,8 @@ module IRC
 class PluginManager
   
   include MonitorMixin
+  
+  cattr_accessor :logger
   
   THREAD_READY_WAIT = 0.1 # seconds
   
@@ -107,7 +110,8 @@ class PluginManager
         rescue Exception => e # catch any exceptions, including syntax errors
           # all exceptions are caught so reloading plugins won't cause the 
           # client to crash.
-          # log exception here, eventually
+          logger.warn "Plugin Manager caught exception #{e}"
+          logger.warn e.backtrace[0]
         end
       end
     end
@@ -129,9 +133,8 @@ class PluginManager
       begin
         @threads.each { |thread| thread.join(THREAD_READY_WAIT) }
       rescue => e
-        # log exceptions here...
-#        puts "exception caught in plugin handler thread: #{e}"
-#        puts e.backtrace[0]
+        logger.warn "exception caught in plugin handler thread: #{e}"
+        logger.warn e.backtrace[0]
       end
       
       # delete any threads that are done
