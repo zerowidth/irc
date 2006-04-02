@@ -14,7 +14,6 @@ class BasicPlugin < Plugin
       if private_message?(msg)
         reply(msg.sender, "what, talking to me in private? begone, coward.")
       else
-        p msg.params[1]
         if msg.params[1] =~ %r{^#{@state[:nick]}(?:\S*\s+)(.*)?}
           case $1
           when /say\s+(.*)/
@@ -33,13 +32,16 @@ class BasicPlugin < Plugin
             @command_queue.add NickCommand.new($1)
           when /help/
             reply(destination_of(msg), "things i can do: say, do, join, part, quit, help")
+          when /bork/
+            raise 'bork'
           else
             reply(msg, "#{msg.prefix[:nick]}: what?")
           end
         end
       end
     rescue Exception => e
-      p e
+      logger.warn "exception caught: #{e}"
+      logger.warn e.backtrace[0]
     end
   end
 end

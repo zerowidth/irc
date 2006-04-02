@@ -35,7 +35,7 @@ class Client
   def initialize(configfile=nil)
     # initialize logging
     @logger = Logger.new(STDOUT) # TODO: make this more flexible
-    [Message, IRCConnection, PluginManager].each do |klass|
+    [Message, IRCConnection, PluginManager, Plugin].each do |klass|
       klass.logger ||= @logger
     end
     @logger.level = Logger.const_get(DEFAULT_LOG_LEVEL.to_s.upcase)

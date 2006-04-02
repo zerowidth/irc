@@ -20,6 +20,8 @@ module IRC
 
 class Plugin
   
+  cattr_accessor :logger
+  
   def initialize(command_queue, config, state)
     @command_queue = command_queue
     @config = config
