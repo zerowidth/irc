@@ -6,6 +6,7 @@ require 'irc/plugin'
 include IRC
 
 class BasicPlugin < Plugin
+  register_for RPL_WELCOME, CMD_PRIVMSG
   def m001(msg)
     @command_queue.add( JoinCommand.new('#test') )
   end
@@ -45,7 +46,6 @@ class BasicPlugin < Plugin
     end
   end
 end
-PluginManager.register_plugin BasicPlugin, RPL_WELCOME, CMD_PRIVMSG
 
 c = Client.new
 c.config[:host] = 'f3h.com'

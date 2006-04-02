@@ -3,6 +3,9 @@ require 'irc/plugin'
 module IRC
 
 class CorePlugin < IRC::Plugin
+  
+  register_for RPL_WELCOME, CMD_NICK, ERR_NICKNAMEINUSE, ERR_ERRONEUSNICKNAME
+  
   # RPL_WELCOME, sent when registration with network was successful
   # get the nickname from the config and set it in the state
   def m001(message)
@@ -44,7 +47,5 @@ class CorePlugin < IRC::Plugin
   end
   
 end
-
-PluginManager.register_plugin CorePlugin, RPL_WELCOME, CMD_NICK, ERR_NICKNAMEINUSE, ERR_ERRONEUSNICKNAME
 
 end # module

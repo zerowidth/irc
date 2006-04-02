@@ -32,6 +32,10 @@ class Plugin
   def teardown
   end
   
+  def self.register_for(*commands)
+    PluginManager.register_plugin(self, *commands)
+  end
+  
   private #############################
   # helper methods:
 
