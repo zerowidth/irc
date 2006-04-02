@@ -1,6 +1,6 @@
 class CommandQueueStub
   attr_reader :queue
-  def initialize()
+  def initialize
     @queue = []
   end
 
@@ -8,12 +8,12 @@ class CommandQueueStub
     @queue.push(*elems)
   end
 
-  def dequeue()
+  def dequeue
     # client testing will use the full-on CommandQueue
     raise "don't call this if you're not the client!"
   end
 
-  def empty?()
+  def empty?
     @queue.empty?
   end
   

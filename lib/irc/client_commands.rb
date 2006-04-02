@@ -5,13 +5,10 @@ require 'irc/rfc2812'
 module IRC
 
 # DataCommand: contains text data coming in from the network
-class DataCommand < IRCCommand
-  type :uses_plugins
-
+class DataCommand < PluginCommand
   def initialize(data)
     @data = data
   end
-  
   def execute(plugin_handler)
     msg = Message.parse(@data)
     plugin_handler.dispatch(msg)
@@ -20,9 +17,7 @@ class DataCommand < IRCCommand
 end
 
 # SendCommand: contains text data to send over the network
-class SendCommand < IRCCommand
-  type :uses_socket
-
+class SendCommand < SocketCommand
   def initialize(data)
     @data = data
   end
@@ -33,9 +28,7 @@ class SendCommand < IRCCommand
 end
 
 # QuitCommand: tells client to quit (with optional reason)
-class QuitCommand < IRCCommand
-  type :uses_client
-  
+class QuitCommand < ClientCommand  
   def initialize(reason=nil)
     @reason = reason
   end
@@ -46,9 +39,7 @@ class QuitCommand < IRCCommand
 end
 
 # RegisterCommand: (attempts to) register the client on the network
-class RegisterCommand < IRCCommand
-  type :uses_queue
-  
+class RegisterCommand < QueueCommand
   def initialize(nick,user,realname)
     @nick = nick
     @user = user
@@ -63,9 +54,7 @@ class RegisterCommand < IRCCommand
 end
 
 # NickCommand: sends nick change message
-class NickCommand < IRCCommand
-  type :uses_queue_config_state # uses the queue and the state
-  
+class NickCommand < QueueConfigStateCommand
   def initialize(nick)
     @nick = nick
   end
@@ -81,12 +70,12 @@ class NickCommand < IRCCommand
   end
 end
 
-class JoinCommand < IRCCommand
-  queue_command CMD_JOIN
+class JoinCommand < QueueCommand
+  simple_queue_command CMD_JOIN
 end
 
-class PartCommand < IRCCommand
-  queue_command CMD_PART
+class PartCommand < QueueCommand
+  simple_queue_command CMD_PART
 end
 
 end # module

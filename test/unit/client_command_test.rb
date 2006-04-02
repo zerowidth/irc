@@ -11,7 +11,7 @@ class IRC::SendCommand
   attr_reader :data
 end
 
-class BasicCommandTests < Test::Unit::TestCase
+class ClientCommandTests < Test::Unit::TestCase
   include IRC
   
   def setup
@@ -30,7 +30,7 @@ class BasicCommandTests < Test::Unit::TestCase
   end
   
   def test_data_command
-    assert_equal :uses_plugins, @datacmd.type
+    assert @datacmd.is_a?(PluginCommand)
     
     # test that message gets parsed and dispatched to plugins    
     FlexMock.use('mock plugin handler') do |plugin_handler|
@@ -40,7 +40,7 @@ class BasicCommandTests < Test::Unit::TestCase
   end
   
   def test_send_command
-    assert_equal :uses_socket, @sendcmd.type
+    assert @sendcmd.is_a?(SocketCommand)
     assert_equal 'send this data', @sendcmd.data # .data accessor (easier for testing)
     ConnectionMock.use('connection') do |conn|
       conn.should_receive(:send).with('send this data').once
@@ -49,7 +49,7 @@ class BasicCommandTests < Test::Unit::TestCase
   end
   
   def test_quit_command
-    assert_equal :uses_client, @quitcmd.type
+    assert @quitcmd.is_a?(ClientCommand)
     FlexMock.use('client mock') do |client|
       client.should_receive(:quit).with('reason').once
       @quitcmd.execute(client)
@@ -57,7 +57,7 @@ class BasicCommandTests < Test::Unit::TestCase
   end
   
   def test_register_command
-    assert_equal :uses_queue, @regcmd.type
+    assert @regcmd.is_a?(QueueCommand)
     assert @cq.empty?
     @regcmd.execute(@cq)
     assert_equal 2, @cq.queue.size
@@ -66,7 +66,7 @@ class BasicCommandTests < Test::Unit::TestCase
   end
   
   def test_nick_command
-    assert_equal :uses_queue_config_state, @nickcmd.type
+    assert @nickcmd.is_a?(QueueConfigStateCommand)
     assert @cq.empty?
     assert_equal nil, @state[:newnick]
     @nickcmd.execute(@cq,@config,@state)
@@ -86,7 +86,7 @@ class BasicCommandTests < Test::Unit::TestCase
 
   # helper to make testing of basic queue commands easier
   def assert_command_sends(cmd, data)
-    assert_equal :uses_queue, cmd.type
+    assert cmd.is_a?(QueueCommand)
     assert @cq.empty?
     cmd.execute(@cq)
     assert_equal SendCommand, @cq.queue[0].class

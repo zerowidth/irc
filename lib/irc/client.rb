@@ -104,20 +104,20 @@ class Client
     # this speeds up testing, so until @quit it is!
     until @quit do
       command = @command_queue.dequeue
-      case command.type
+      case command
       # very few plugins will do this, and then only to call quit.
       # everything else should be handled through the queue
       # quit is done via the client, since the client quit method sends out 
       # a QUIT command to the server.
-      when :uses_client
+      when ClientCommand
         command.execute(self) 
-      when :uses_socket
+      when SocketCommand
         command.execute(@connection)
-      when :uses_plugins
+      when PluginCommand
         command.execute(@plugin_manager)
-      when :uses_queue
+      when QueueCommand
         command.execute(@command_queue)
-      when :uses_queue_config_state
+      when QueueConfigStateCommand
         command.execute(@command_queue, @config, @state)
       end
     end

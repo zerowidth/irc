@@ -24,6 +24,25 @@ class ClientTest < Test::Unit::TestCase
     attr_reader :plugins
   end
   
+  # set up some test commands for testing command execution
+  module ExecutionRecorder
+    attr_reader :params
+    def initialize
+      @params = []
+    end
+    def execute(*args)
+      @params = args
+    end
+  end
+  
+  class TestClientCommand < IRC::ClientCommand; include ExecutionRecorder; end
+  class TestSocketCommand < IRC::SocketCommand; include ExecutionRecorder; end
+  class TestPluginCommand < IRC::PluginCommand; include ExecutionRecorder; end
+  class TestQueueCommand < IRC::QueueCommand; include ExecutionRecorder; end
+  class TestQueueConfigStateCommand < IRC::QueueConfigStateCommand
+    include ExecutionRecorder;
+  end
+  
   def setup
     # create client
     @client = Client.new
@@ -139,29 +158,42 @@ class ClientTest < Test::Unit::TestCase
   # test that the client correctly executes commands based on their type.
   # This tests that the client grabs the commands off the queue and that they
   # also get executed correctly.
+  
   def test_client_command_execution
-    client_connect
-    command_type_test(:uses_client, @client)
+    cmd = TestClientCommand.new
+    execute_with_client cmd
+    assert_equal 1, cmd.params.size
+    assert_equal @client, cmd.params[0]
   end
   
   def test_socket_command_execution
-    client_connect
-    command_type_test(:uses_socket, @client.connection)
+    cmd = TestSocketCommand.new
+    execute_with_client cmd
+    assert_equal 1, cmd.params.size
+    assert_equal @client.connection, cmd.params[0]
   end
   
   def test_plugins_command_execution
-    client_connect
-    command_type_test(:uses_plugins, @client.plugin_manager)
+    cmd = TestPluginCommand.new
+    execute_with_client cmd
+    assert_equal 1, cmd.params.size
+    assert_equal @client.plugin_manager, cmd.params[0]
   end
   
   def test_queue_command_execution
-    client_connect
-    command_type_test(:uses_queue, @client.command_queue)
+    cmd = TestQueueCommand.new
+    execute_with_client cmd
+    assert_equal 1, cmd.params.size
+    assert_equal @client.command_queue, cmd.params[0]
   end
   
   def test_queue_config_state_command_execution
-    client_connect
-    command_type_test(:uses_queue_config_state, @client.command_queue, @client.config, @client.state)
+    cmd = TestQueueConfigStateCommand.new
+    execute_with_client cmd
+    assert_equal 3, cmd.params.size
+    assert_equal @client.command_queue, cmd.params[0]
+    assert_equal @client.config, cmd.params[1]
+    assert_equal @client.state, cmd.params[2]
   end
   
   # core plugin and other plugin loading tests
@@ -201,34 +233,29 @@ class ClientTest < Test::Unit::TestCase
     data
   end
   
-  # tests that a command of type command_type has execute invoked with execute_called_with
-  def command_type_test(command_type, *execute_called_with)
+  # test helper
+  # puts cmd in the client's queue and waits for it to be executed.
+  def execute_with_client(cmd)
+    client_connect
+
     # this might be a race condition, the queue thread might not have checked @quit already.
     # If this whole test fails, check that the queue thread isn't dead yet
     @client.queue_thread.join(0.05) # try to avoid race condition by waiting a tiny bit
     @client.set_quit # set the flag after the thread's waiting on the queue
     
+    assert @client.queue_thread.alive?, 'race condition encountered, please check'
+    
+    @client.command_queue.add(cmd)
+
     # there's also another race condition here, one involving scheduling. even if the above
     # is successful, it's possible that the queue thread quits out before anything
-    # is added to the command queue. if this happens, the .type call will not be called.
-
-    CommandMock.use('mock command') do |cmd|
-      # make sure the command is executed with the correct arguments
-      cmd.should_receive(:execute).with(*execute_called_with).once # execute only once!
-      # placed second, since it's evaluated first (yay flexmock) (checking for race condition)
-      # if this fails, see above message
-      cmd.should_receive(:type).and_return(command_type).at_least.once
-
-      assert @client.queue_thread.alive?, 'race condition encountered, please check'
-      # enqueuing this will cause the command to parse nearly instantly.
-      @client.command_queue.add(cmd)
-      
-      # join the queue thread to make sure the command gets executed.
-      # since @quit is set, it should stop after processing the command, aka immediately.
-      @client.queue_thread.join(0.1)
-
-    end
-
+    # is added to the command queue. if this happens, the command will not be executed
+    
+    # join the queue thread to make sure the command gets executed.
+    # since @quit is set, it should stop after processing the command, aka immediately.
+    @client.queue_thread.join(0.1) # catches the exception
+    
     assert_false @client.queue_thread.alive?, 'check queue thread quit flag, something''s wrong'    
   end
+  
 end
