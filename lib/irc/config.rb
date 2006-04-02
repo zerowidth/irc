@@ -32,8 +32,7 @@ module IRC
     }.freeze
     
     def initialize(configfile=nil)
-      @config = CONFIG_DEFAULTS.dup # .dup or changing @config tries to change CONFIG_DEFAULTS
-      @readonly = false # readonly locking, set by the client once things are "locked down"
+      @config = CONFIG_DEFAULTS.dup # .dup, otherwise changing @config tries to change CONFIG_DEFAULTS
       load_from_file(configfile) if configfile
     end
 
@@ -44,20 +43,19 @@ module IRC
     
     def []=(key, val)
       raise "config is read-only" if readonly?
-      #puts "config changing #{key} to #{val}"
       @config[key] = val
     end
     
     def readonly?
-      @readonly
+      @config.frozen?
     end
     
     def readonly!
-      @readonly = true
+      @config.freeze
     end
     
     def writeable!
-      @readonly = false
+      @config = @config.dup # unfreeze
     end
     
     # called by client before starting - gotta make sure everything's set up
