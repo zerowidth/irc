@@ -16,7 +16,7 @@ class StateManagerPluginTests < Test::Unit::TestCase
       },
       :names => {
         '#chan'=>['somenick', 'nick'], # has own nick!
-        '#chan2' => ['name2', 'somenick'], 
+        '#chan2' => ['nick', 'name2', 'somenick'], 
 #        'somenick' => ['somenick'] # private message, hence the key
       },
       :events => {
@@ -33,6 +33,10 @@ class StateManagerPluginTests < Test::Unit::TestCase
     
     @msg_self_join = Message.parse(':nick!~user@server.com JOIN #chan')
     @msg_other_join = Message.parse(':somedude!~someuser@server.com JOIN #chan')
+    
+    @msg_self_part = Message.parse(':nick!~user@server.com PART #chan :reason')
+    @msg_other_part = Message.parse(':somenick!~someuser@server.com PART #chan :reason')
+    @msg_other_quit = Message.parse(':somenick!~someuser@server.com QUIT :reason')
 
     @msg_new_topic = Message.parse(':bigfeh.com 332 nick #chan :new topic')
     
@@ -57,7 +61,7 @@ class StateManagerPluginTests < Test::Unit::TestCase
   def test_nick_when_other
     @plugin.nick(@msg_change_other_nick)
     assert_equal 'somenick2', @state[:names]['#chan'][0]
-    assert_equal 'somenick2', @state[:names]['#chan2'][1]
+    assert_equal 'somenick2', @state[:names]['#chan2'][2]
     assert_event @state[:events]['#chan'][0], 
       :nickchange, :update, '#chan', 'somenick', 'somenick2', nil
     assert_event @state[:events]['#chan2'][0], 
@@ -85,6 +89,36 @@ class StateManagerPluginTests < Test::Unit::TestCase
     assert_equal 3, @state[:names]['#chan'].size
     assert_event @state[:events]['#chan'].first, 
       :join, :update, '#chan', 'somedude', nil, '~someuser@server.com'
+  end
+  
+  def test_self_part
+    @plugin.part(@msg_self_part)
+    assert_equal nil, @state[:names]['#chan']
+    assert_equal nil, @state[:topics]['#chan']
+    assert_equal nil, @state[:events]['#chan']
+  end
+  
+  def test_other_part
+    @plugin.part(@msg_other_part)
+    assert_equal ['nick'], @state[:names]['#chan']
+    # make sure he didn't leave the other channel!
+    assert_equal ['nick', 'name2', 'somenick'], @state[:names]['#chan2']
+    assert_event @state[:events]['#chan'][0], 
+      :part, :server, '#chan', 'somenick', '~someuser@server.com', 'reason'
+    assert_event @state[:events]['#chan'][1], 
+      :part, :update, '#chan', 'somenick', '~someuser@server.com', 'reason'
+  end
+  
+  def test_other_quit
+    @plugin.quit(@msg_other_quit)
+    assert_equal ['nick'], @state[:names]['#chan']
+    assert_equal ['nick', 'name2'], @state[:names]['#chan2']
+    assert_event @state[:events]['#chan'][0], 
+      :quit, :server, '#chan', 'somenick', '~someuser@server.com', 'reason'
+    assert_event @state[:events]['#chan'][1], 
+      :quit, :update, '#chan', 'somenick', '~someuser@server.com', 'reason'
+    assert_event @state[:events]['#chan2'][0], 
+      :quit, :server, '#chan', 'somenick', '~someuser@server.com', 'reason'
   end
   
   def test_topic
