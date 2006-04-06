@@ -50,7 +50,7 @@ module IRC
       # split up the message around the :
       params, message = message.split(':',2)
       params = params.split(/\s+/)
-      params << message
+      params << message if message # in case :<stuff> didn't exist
       
       # this handles both normal messages and direct command messages from the server
       sender = prefix[:server] ? prefix[:server] : 

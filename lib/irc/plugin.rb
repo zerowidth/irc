@@ -44,10 +44,6 @@ class Plugin
   private #############################
   # helper methods:
 
-  def reply(text)
-    
-  end
-
   def reply(who, text)
     send_command(CMD_PRIVMSG, "#{who} :#{text}")
   end

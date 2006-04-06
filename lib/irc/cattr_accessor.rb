@@ -1,4 +1,7 @@
 # duplicated from Ruby On Rails, since it's so handy.
+# TODO: include ActiveHelper instead of copy/pasting the code here
+# this will add rails as a dependency, however... 
+#
 # Extends the class object with class and instance accessors for class attributes,
 # just like the native attr* accessors for instance attributes.
 class Class # :nodoc:
