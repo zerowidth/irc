@@ -6,6 +6,9 @@ require 'stubs/command_queue_stub'
 class IRC::NickCommand
   attr_reader :nick
 end
+class IRC::SendCommand
+  attr_reader :data
+end
 # same for PluginManager, for testing registration of the core plugin
 class IRC::PluginManager
   attr_reader :plugins, :handlers
@@ -35,6 +38,8 @@ class CorePluginTest < Test::Unit::TestCase
     @msg_nick_in_use_rfc = Message.parse(':server.com 433 newnick :Nickname already in use')
     @msg_invalid_nick_rfc = Message.parse(':server.com 432 / :Erroneus Nickname')
     
+    @msg_ping = Message.parse('PING :server.com')
+    
   end
   
   def teardown
@@ -43,10 +48,13 @@ class CorePluginTest < Test::Unit::TestCase
   
   def test_core_plugin_registration
     pm = PluginManager.new(@cq, @config, @state)
-    assert_equal CorePlugin, pm.plugins.first.class
+    hasplugin = false # pm.plugins.include? doesn't work, since include? doesn't do kind_of?
+    pm.plugins.each { |p| hasplugin ||= p.kind_of?(IRC::CorePlugin) }
+    assert hasplugin
     # check that core plugin got registered for the right things
-    [RPL_WELCOME, CMD_NICK, ERR_NICKNAMEINUSE, ERR_ERRONEUSNICKNAME].each do |command|
-      assert pm.handlers[command]
+    [RPL_WELCOME, CMD_NICK, ERR_NICKNAMEINUSE, ERR_ERRONEUSNICKNAME, CMD_PING].each do |command|
+      # hacked this instead of assert to get a more verbose error output
+      assert_equal true, pm.handlers[command].is_a?(Array), "not registered for #{command}"
     end
   end
   
@@ -138,5 +146,12 @@ class CorePluginTest < Test::Unit::TestCase
     @plugin.m432(@msg_invalid_nick_rfc)    
     assert_equal [], @state[:newnick]
   end
-
+  
+  # server keepalive
+  def test_ping_pong
+    @plugin.ping(@msg_ping)
+    # check that a pong command was pushed:
+    assert_equal SendCommand, @cq.queue.first.class
+    assert_equal 'PONG server.com', @cq.queue.first.data
+  end
 end

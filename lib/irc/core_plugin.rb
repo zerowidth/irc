@@ -4,7 +4,7 @@ module IRC
 
 class CorePlugin < IRC::Plugin
   
-  register_for RPL_WELCOME, CMD_NICK, ERR_NICKNAMEINUSE, ERR_ERRONEUSNICKNAME
+  register_for RPL_WELCOME, CMD_NICK, ERR_NICKNAMEINUSE, ERR_ERRONEUSNICKNAME, CMD_PING
   
   # RPL_WELCOME, sent when registration with network was successful
   # get the nickname from the config and set it in the state
@@ -44,6 +44,11 @@ class CorePlugin < IRC::Plugin
     
     # if the client hasn't registered yet, there's no easy way to recover.
     raise 'Invalid nick specified, could not register with server' unless @state[:nick]
+  end
+  
+  # ping/pong (server keepalive)
+  def ping(message)
+    send_command(CMD_PONG, message.params[0])
   end
   
 end

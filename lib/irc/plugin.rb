@@ -8,6 +8,11 @@ Numeric reply methods are prefixed with 'm':
   def privmsg(message) handles CMD_PRIVMSG 
   def m001(message) handles RPL_WELCOME
 
+To register a plugin for a particular command, you can either use
+  register_for(*commands)
+within a Plugin class definition, or explicitly register the plugin
+  PluginManager.register_plugin(plugin_class,*commands)
+
 Also in Plugin, various helpers are defined: reply, reply_command, etc. to reply to a message.
 
 =end
