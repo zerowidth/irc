@@ -6,20 +6,20 @@
 require 'thread'
 
 class SynchronizedHash < Hash
-  def initialize(*args)
-    super(args)
+  def initialize(default=nil)
+    super(default)
     @mutex = Mutex.new
   end
   
   def [](key)
     @mutex.synchronize do
-      super(key)
+      result = super(key)
     end
   end
   
   def []=(key, val)
     @mutex.synchronize do
-      super(key,val)
+      result = super(key,val)
     end
   end
   

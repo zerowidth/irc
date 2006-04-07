@@ -39,6 +39,7 @@ class StateManagerPluginTests < Test::Unit::TestCase
     @msg_other_quit = Message.parse(':somenick!~someuser@server.com QUIT :reason')
 
     @msg_new_topic = Message.parse(':bigfeh.com 332 nick #chan :new topic')
+    @msg_topic_change = Message.parse(':somenick!~someuser@server.com TOPIC #chan :new topic')
     
     @msg_names_1 = Message.parse(':server.com 353 nick @ #chan :one @two three')
     @msg_names_2 = Message.parse(':server.com 353 nick @ #chan :@four five @six')
@@ -124,8 +125,19 @@ class StateManagerPluginTests < Test::Unit::TestCase
   def test_topic
     @plugin.m332(@msg_new_topic)
     assert_equal 'new topic', @state[:topics]['#chan']
-    assert_event @state[:events]['#chan'].first,
+    assert_event @state[:events]['#chan'][0],
+      :topic, :server, '#chan', nil, nil, 'new topic'
+    assert_event @state[:events]['#chan'][1],
       :topic, :update, '#chan', nil, nil, 'new topic'
+  end
+  
+  def test_topic_change
+    @plugin.topic(@msg_topic_change)
+    assert_equal 'new topic', @state[:topics]['#chan']
+    assert_event @state[:events]['#chan'][0],
+      :topic, :server, '#chan', 'somenick', nil, 'new topic'
+    assert_event @state[:events]['#chan'][1],
+      :topic, :update, '#chan', 'somenick', nil, 'new topic'
   end
   
   def test_names

@@ -9,6 +9,7 @@ class MessageTest < Test::Unit::TestCase
     @general_server_message = ':server.com 001 rbot :Welcome to the network: dude!'
     @server_ping_message = 'PING :server.com'
     @join_message = ':somenick!~someuser@server.com JOIN #chan'
+    @error_message = 'ERROR :Closing Link: 0.0.0.0 (Ping timeout)'
   end
   
   def test_parsing_from_person
@@ -48,6 +49,12 @@ class MessageTest < Test::Unit::TestCase
     assert_equal @join_message, msg.raw_message
     assert_equal CMD_JOIN, msg.message_type
     assert_equal ['#chan'], msg.params
+  end
+  
+  def test_error
+    msg = Message.parse(@error_message)
+    assert_equal CMD_ERROR, msg.message_type
+    assert_equal ['Closing Link: 0.0.0.0 (Ping timeout)'], msg.params
   end
   
 end

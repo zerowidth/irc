@@ -102,11 +102,13 @@ class PluginManager
   
   def load_plugins_from_dir(plugin_dir)
     dir = File.expand_path(plugin_dir)
+    logger.info "loading plugins from #{dir}:"
     Dir.foreach(dir) do |entry| # not recursive!
       filename = dir + '/' + entry
       if File.file?(filename) && entry =~ /\.rb$/ # only load ruby files
         begin 
           load(filename)
+          logger.info "loaded #{filename}"
         rescue Exception => e # catch any exceptions, including syntax errors
           # all exceptions are caught so reloading plugins won't cause the 
           # client to crash.

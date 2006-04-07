@@ -32,14 +32,17 @@ class StateManagerPlugin < Plugin
   
   MAX_EVENT_QUEUE_SIZE = 3000 # max size of event queue (stored in state)
   
-  register_for CMD_NICK, CMD_JOIN, CMD_PART, CMD_QUIT
+  register_for CMD_NICK, CMD_JOIN, CMD_PART, CMD_QUIT, CMD_TOPIC
   register_for RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES
  
 # TODO: add a general queue for part/quit messages to inform the client what happens 
-#  def initialize(queue,config,state)
-#    super(queue,config,state)
-#    state.merge! { :names=>{}, :topics=>{}, :events=>{:general=>[]} }
-#  end
+  def initialize(queue,config,state)
+    super(queue,config,state)
+    state[:names] ||= {}
+    state[:topics] ||= {}
+    state[:events] ||= {}
+  end
+
   
   def nick(msg)
     @state[:names].each_pair do |chan, namelist|
@@ -102,10 +105,12 @@ class StateManagerPlugin < Plugin
     end
   end
   
+  def topic(msg)
+    topic_change msg.prefix[:nick], msg.params[0], msg.params[1]
+  end
+  
   def m332(msg) # RPL_TOPIC
-    @state[:topics][msg.params[1]] = msg.params[2]
-    add_event(msg.params[1], EventFactory.new_event(
-      :topic, :update, msg.params[1], nil, nil, msg.params[2]) )
+    topic_change nil, msg.params[1], msg.params[2]
   end
   
   def m353(msg) # RPL_NAMREPLY # update the name lists
@@ -128,6 +133,14 @@ class StateManagerPlugin < Plugin
     @state[:events][where] ||= []
     @state[:events][where] << event
     while @state[:events][where].size > MAX_EVENT_QUEUE_SIZE do @state[:events][where].shift end
+  end
+  
+  def topic_change(who, where, topic)
+    @state[:topics][where] = topic
+    add_event(where, EventFactory.new_event(
+      :topic, :server, where, who, nil, topic) )
+    add_event(where, EventFactory.new_event(
+      :topic, :update, where, who, nil, topic) )
   end
 
 end
