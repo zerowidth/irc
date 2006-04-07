@@ -14,7 +14,7 @@ module IRC
   
 class IRCConnection
   
-  SOCKET_READY_WAIT = 0.5 # polling wait time for socket, set to nil for infinite
+  SOCKET_READY_WAIT = nil # polling wait time for socket, set to nil for infinite
   
   cattr_accessor :logger
   
@@ -37,11 +37,10 @@ class IRCConnection
     start_main_loop
   end
   
-  # disconnect will interrupt a current connection or disconnect loop
+  # disconnect will close down a current connection
   def disconnect
-    raise "already disconnected" unless connected?
     @disconnect = true; # set the flag
-    @socket.close # then kill the connection
+    @socket.close unless @socket.closed? # then kill the connection
     # now join the thread - catch exceptions, and close it all down
     @connection_thread.join if @connection_thread
     @connection_thread = nil
@@ -56,6 +55,11 @@ class IRCConnection
   
   def connected?
     @socket && !@socket.closed?
+  end
+  
+  # interrupts the current connection, leaving the reconnect loop running
+  def cancel_current_connection
+    @socket.close
   end
   
   private #############################

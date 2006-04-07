@@ -65,14 +65,13 @@ class Client
     @plugin_manager = PluginManager.new(@command_queue, @config, @state)
 
     @config.readonly! # no more changes!
-    @connection = IRCConnection.new(@config[:host], @config[:port], @command_queue)
-    @connection.start # won't return until connection is made
-
+    connect # won't return until connected
+    
     # ok, everything's good. set the running flag and enter the queue processing loop
     @running = true
     
     # register with the irc server
-    @command_queue.add( RegisterCommand.new(@config[:nick], @config[:user], @config[:realname]) )
+    register_with_server
  
     start_queue_handler
   end
@@ -81,7 +80,8 @@ class Client
     # reconnect to server (do this when getting an ERROR message, ping timeout, etc)
     logger.info "reconnecting"
     @connection.disconnect
-    @connection.start
+    connect
+    register_with_server # reregister
   end
 
   def quit(reason=nil)
@@ -116,6 +116,11 @@ class Client
     
   private #############################
   
+  def connect
+    @connection = IRCConnection.new(@config[:host], @config[:port], @command_queue)
+    @connection.start # won't return until connection is made
+  end
+  
   def start_queue_handler
     @queue_thread = Thread.new do
       queue_loop
@@ -146,6 +151,10 @@ class Client
         command.execute(@command_queue, @config, @state)
       end
     end
+  end
+  
+  def register_with_server
+    @command_queue.add( RegisterCommand.new(@config[:nick], @config[:user], @config[:realname]) )
   end
 
 end

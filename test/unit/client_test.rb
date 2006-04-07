@@ -151,11 +151,14 @@ class ClientTest < Test::Unit::TestCase
 
   def test_reconnect
     client_connect
+    2.times { assert gets_from_server } # clear the registration
     assert @client.connection.connected?
     assert_false @serverclient.closed?
     @client.reconnect
     assert @client.connection.connected?
     assert_equal nil, @serverclient.gets # connection should have been closed
+    server_accept # get the new connection
+    2.times { assert gets_from_server } # should re-register
   end
     
 
@@ -225,15 +228,22 @@ class ClientTest < Test::Unit::TestCase
   
   def client_connect
     config_client
+    server_accept do
+      @client.start
+    end
+  end
+  
+  def server_accept
     t = Thread.new { @serverclient = @server.accept } # wait for a connection
-    @client.start
-    t.join(0.5) # with a timeout in case something goes wrong
+    yield if block_given?
+    t.join(0.5) # with timeout in case of problems
   end
   
   def gets_from_server
     data = nil # scope
-    t = Thread.new { data = @serverclient.gets.strip }
+    t = Thread.new { data = @serverclient.gets }
     t.join(0.1) # in case of problems
+    data.strip! if data
     data
   end
   

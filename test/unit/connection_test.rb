@@ -1,6 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
 require 'irc/connection'
 require 'stubs/command_queue_stub'
+require 'logger'
 
 # this test relies on:
 # - command queue stub
@@ -18,10 +19,11 @@ class ConnectionTest < Test::Unit::TestCase
     @conn = IRCConnection.new(TEST_HOST, TEST_PORT, @cq, RETRY_WAIT)
     @server = TCPServer.new(TEST_HOST, TEST_PORT)
     @client = nil # client connection, from server
+    IRCConnection.logger = Logger.new(nil) # suppress logging errors during test
   end
   
   def teardown
-    @conn.disconnect if @conn.connected?
+    @conn.disconnect
     @client.close if @client && !@client.closed?
     @server.close if @server && !@server.closed?
   end
@@ -55,11 +57,7 @@ class ConnectionTest < Test::Unit::TestCase
     # disconnect
     @conn.disconnect
     assert_false @conn.connected?
-    
-    # check that disconnect doesn't work twice
-    assert_raises RuntimeError do
-      @conn.disconnect
-    end
+
   end
   
   # test that sending data to the connection results in a DataCommand object in the
@@ -103,6 +101,13 @@ class ConnectionTest < Test::Unit::TestCase
     @conn.send('hello')
     assert_equal 'hello', gets_from_server   
     
+  end
+  
+  def test_cancel_current_connection
+    connect
+    assert @conn.connected?
+    @conn.cancel_current_connection
+    assert_false @conn.connected?
   end
   
 end

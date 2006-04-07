@@ -31,6 +31,8 @@ class BasicPlugin < Plugin
             @command_queue.add PartCommand.new($1)
           when /nick\s+(.*)/
             @command_queue.add NickCommand.new($1)
+          when /flood/
+            30.times { reply(msg.sender, (['flood'] * 20).join(' ') ) }
           when /state/
             reply(destination_of(msg), "names: #{@state[:names].inspect}")
             reply(destination_of(msg), "topics: #{@state[:topics].inspect}")
