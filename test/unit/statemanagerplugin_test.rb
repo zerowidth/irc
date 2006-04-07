@@ -44,6 +44,8 @@ class StateManagerPluginTests < Test::Unit::TestCase
     @msg_names_1 = Message.parse(':server.com 353 nick @ #chan :one @two three')
     @msg_names_2 = Message.parse(':server.com 353 nick @ #chan :@four five @six')
     @msg_end_of_names = Message.parse(':server.com 366 nick #chan :end of names list')
+    
+    @msg_welcome = Message.parse(':server.com 001 :Welcome to the network')
   end
   
   def test_registration
@@ -164,6 +166,22 @@ class StateManagerPluginTests < Test::Unit::TestCase
       @plugin.m332(@msg_new_topic)
     end    
     assert_equal StateManagerPlugin::MAX_EVENT_QUEUE_SIZE, @state[:events]['#chan'].size
+  end
+  
+  # plugin should autorejoin any channels it was in
+  def test_autorejoin
+    # test without any channels first
+    topics = @state[:topics]
+    @state[:topics] = []
+    @plugin.m001(@msg_welcome)
+    assert @queue.empty?
+    
+    # now with two channels
+    @state[:topics] = topics
+    @plugin.m001(@msg_welcome)
+    # should be two join commands on the queue now
+    assert JoinCommand, @queue.queue[0].class
+    assert JoinCommand, @queue.queue[0].class
   end
   
   ##### helpers  

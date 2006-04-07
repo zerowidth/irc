@@ -30,10 +30,11 @@ require 'irc/event'
 include IRC
 class StateManagerPlugin < Plugin
   
-  MAX_EVENT_QUEUE_SIZE = 3000 # max size of event queue (stored in state)
+  MAX_EVENT_QUEUE_SIZE = 3000 # max size of event queue (stored in state for a chan)
   
+  # basic state management - if these happen, keep the state
   register_for CMD_NICK, CMD_JOIN, CMD_PART, CMD_QUIT, CMD_TOPIC
-  register_for RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES
+  register_for RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES, RPL_WELCOME
  
 # TODO: add a general queue for part/quit messages to inform the client what happens 
   def initialize(queue,config,state)
@@ -43,6 +44,11 @@ class StateManagerPlugin < Plugin
     state[:events] ||= {}
   end
 
+  def m001(msg) # RPL_WELCOME, autorejoin
+    @state[:topics].each do |chan, topic|
+      @command_queue.add JoinCommand.new(chan)
+    end
+  end
   
   def nick(msg)
     @state[:names].each_pair do |chan, namelist|
