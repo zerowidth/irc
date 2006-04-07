@@ -117,22 +117,16 @@ class ClientTest < Test::Unit::TestCase
     assert_equal 'USER user 0 * :realname', gets_from_server
     assert_equal 'NICK nick', gets_from_server
   end
-
-  def test_quit_sends_quit_message
-    client_connect
-    2.times { assert gets_from_server } # clear the registration out of the way
-    @client.quit('quitting')
-    assert_equal 'QUIT :quitting', gets_from_server
-  end
   
   # this one is fun. when QuitCommand was being executed, it tells client to quit.
   # before it sends any data, it kills the queue thread, which is what's executing
   # the quit command... whoops!
-  def test_quit_command_sends_message
+  def test_quit
     client_connect
     2.times { assert gets_from_server } # clear registration
     @client.command_queue.add QuitCommand.new('reason')
     assert_equal 'QUIT :reason', gets_from_server
+    assert_false @client.connection.connected?
   end
   
   # tests for refactoring -- changing start from a blocking call to a nonblocking call,
@@ -154,6 +148,16 @@ class ClientTest < Test::Unit::TestCase
     t.join(0.5) # wait for quit, this should return and the thread should die
     assert_false t.alive?, 'client wait should have returned'
   end
+
+  def test_reconnect
+    client_connect
+    assert @client.connection.connected?
+    assert_false @serverclient.closed?
+    @client.reconnect
+    assert @client.connection.connected?
+    assert_equal nil, @serverclient.gets # connection should have been closed
+  end
+    
 
   # test that the client correctly executes commands based on their type.
   # This tests that the client grabs the commands off the queue and that they

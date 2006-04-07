@@ -38,6 +38,12 @@ class QuitCommand < ClientCommand
   end
 end
 
+class ReconnectCommand < ClientCommand
+  def execute(client)
+    client.reconnect
+  end
+end   
+
 # RegisterCommand: (attempts to) register the client on the network
 class RegisterCommand < QueueCommand
   def initialize(nick,user,realname)

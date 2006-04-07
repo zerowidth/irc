@@ -76,6 +76,13 @@ class Client
  
     start_queue_handler
   end
+  
+  def reconnect
+    # reconnect to server (do this when getting an ERROR message, ping timeout, etc)
+    logger.info "reconnecting"
+    @connection.disconnect
+    @connection.start
+  end
 
   def quit(reason=nil)
     # prevent quit being called twice

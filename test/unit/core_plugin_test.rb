@@ -40,6 +40,8 @@ class CorePluginTest < Test::Unit::TestCase
     
     @msg_ping = Message.parse('PING :server.com')
     
+    @msg_error = Message.parse('ERROR :Closing Link: 0.0.0.0 (Ping timeout)')
+    
   end
   
   def teardown
@@ -52,7 +54,8 @@ class CorePluginTest < Test::Unit::TestCase
     pm.plugins.each { |p| hasplugin ||= p.kind_of?(IRC::CorePlugin) }
     assert hasplugin
     # check that core plugin got registered for the right things
-    [RPL_WELCOME, CMD_NICK, ERR_NICKNAMEINUSE, ERR_ERRONEUSNICKNAME, CMD_PING].each do |command|
+    [RPL_WELCOME, CMD_NICK, ERR_NICKNAMEINUSE, ERR_ERRONEUSNICKNAME, 
+      CMD_PING, CMD_ERROR].each do |command|
       # hacked this instead of assert to get a more verbose error output
       assert_equal true, pm.handlers[command].is_a?(Array), "not registered for #{command}"
     end
@@ -154,4 +157,11 @@ class CorePluginTest < Test::Unit::TestCase
     assert_equal SendCommand, @cq.queue.first.class
     assert_equal 'PONG server.com', @cq.queue.first.data
   end
+  
+  # ERROR :Closing Link: 0.0.0.0 (Ping timeout) should reconnect
+  def test_error_message
+    @plugin.error(@msg_error)
+    assert_equal ReconnectCommand, @cq.queue.first.class
+  end
+  
 end

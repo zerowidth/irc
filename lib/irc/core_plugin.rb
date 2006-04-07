@@ -4,7 +4,8 @@ module IRC
 
 class CorePlugin < IRC::Plugin
   
-  register_for RPL_WELCOME, CMD_NICK, ERR_NICKNAMEINUSE, ERR_ERRONEUSNICKNAME, CMD_PING
+  register_for RPL_WELCOME, CMD_NICK, ERR_NICKNAMEINUSE, ERR_ERRONEUSNICKNAME
+  register_for CMD_PING, CMD_ERROR
   
   # RPL_WELCOME, sent when registration with network was successful
   # get the nickname from the config and set it in the state
@@ -49,6 +50,10 @@ class CorePlugin < IRC::Plugin
   # ping/pong (server keepalive)
   def ping(message)
     send_command(CMD_PONG, message.params[0])
+  end
+  
+  def error(message)
+    @command_queue.add(ReconnectCommand.new)    
   end
   
 end

@@ -18,6 +18,7 @@ class ClientCommandTests < Test::Unit::TestCase
     @datacmd = DataCommand.new(':server.com PRIVMSG #chan :message')
     @sendcmd = SendCommand.new('send this data')
     @quitcmd = QuitCommand.new('reason')
+    @reconnectcmd = ReconnectCommand.new
     @regcmd = RegisterCommand.new('nick','user','realname')
     @nickcmd = NickCommand.new('newnick')
     @joincmd = JoinCommand.new('#channel')
@@ -54,6 +55,14 @@ class ClientCommandTests < Test::Unit::TestCase
       client.should_receive(:quit).with('reason').once
       @quitcmd.execute(client)
     end # verifies the mock's expectations
+  end
+  
+  def test_reconnect_command
+    assert @reconnectcmd.is_a?(ClientCommand)
+    FlexMock.use('client mock') do |client|
+      client.should_receive(:reconnect).once
+      @reconnectcmd.execute(client)
+    end
   end
   
   def test_register_command
