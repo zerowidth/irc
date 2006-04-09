@@ -112,6 +112,11 @@ class Client
   def wait_for_quit
     @queue_thread.join
   end
+  
+  # utility method to check if the client is running
+  def running?
+    @queue_thread != nil && @queue_thread.alive?
+  end
     
   private #############################
   

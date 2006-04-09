@@ -214,6 +214,15 @@ class ClientTest < Test::Unit::TestCase
     @client = Client.new('test/fixtures/config.yaml')
     assert_equal 10000, @client.config[:port]
   end
+  
+  # this method was added later ... utility method!
+  def test_is_running
+    assert_equal false, @client.running?, 'client should not be running'
+    client_connect
+    assert_equal true, @client.running?, 'client should be running'
+    @client.quit
+    assert_equal false, @client.running?, 'client should not be running'
+  end
 
   # helpers ###########################
   def config_client
