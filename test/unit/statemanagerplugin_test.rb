@@ -4,6 +4,8 @@ require 'stubs/queue_stub'
 
 class StateManagerPluginTests < Test::Unit::TestCase
   
+  include IRC
+  
   def setup
     @queue = QueueStub.new
     @config = {}
@@ -19,11 +21,7 @@ class StateManagerPluginTests < Test::Unit::TestCase
         '#chan2' => ['nick', 'name2', 'somenick'], 
 #        'somenick' => ['somenick'] # private message, hence the key
       },
-      :events => {
-        '#chan'=>[],
-        '#chan2'=>[],
-#        'somenick'=>['somenick']
-      }
+      :events => []
     }
     
     @plugin = StateManagerPlugin.new(@queue, @config, @state)
@@ -56,8 +54,9 @@ class StateManagerPluginTests < Test::Unit::TestCase
   def test_nick_when_self
     @plugin.nick(@msg_change_own_nick)
     assert_equal 'newnick', @state[:names]['#chan'][1]
-    assert_event @state[:events]['#chan'].last, 
-      :nickchange, :update, '#chan', 'nick', 'newnick', nil
+    # should be an event listed in every channel
+    assert_event @state[:events].last, NickChangeEvent, :self, '#chan', 'newnick'
+    assert_event @state[:events].first, NickChangeEvent, :self, '#chan2', 'newnick'
   end
   
   # should update all instances of somenick with somenick2 and add event (one per chan)
@@ -65,40 +64,36 @@ class StateManagerPluginTests < Test::Unit::TestCase
     @plugin.nick(@msg_change_other_nick)
     assert_equal 'somenick2', @state[:names]['#chan'][0]
     assert_equal 'somenick2', @state[:names]['#chan2'][2]
-    assert_event @state[:events]['#chan'][0], 
-      :nickchange, :update, '#chan', 'somenick', 'somenick2', nil
-    assert_event @state[:events]['#chan2'][0], 
-      :nickchange, :update, '#chan', 'somenick', 'somenick2', nil
+    # event should exist for all current channels
+    assert_event @state[:events][1], NickChangeEvent, 'somenick', '#chan', 'somenick2'
+    assert_event @state[:events][0], NickChangeEvent, 'somenick', '#chan2', 'somenick2'
+
     # TODO: private message gets updated with new name 
-    # TODO: is this a good idea? might b0rk the front-end app?
-#    assert @state[:names]['somenick2']
-#    assert_equal nil, @state[:names]['somenick']
-#    assert_equal 'somenick2', @state[:names]['somenick2'][0]
-#    assert_event ....
+    # TODO: is this a good idea? might b0rk the front-end app, by changing tab title or anything
   end
 
   def test_self_join
     @state[:names]['#chan'] = nil
     @state[:topics]['#chan'] = nil
-    @state[:events]['#chan'] = nil
+    @state[:events] = []
     @plugin.join(@msg_self_join)
     assert_equal [], @state[:names]['#chan']
     assert_equal '', @state[:topics]['#chan']
-    assert_equal [], @state[:events]['#chan']
+    assert_equal [], @state[:events], 'no new events should be added'
   end
   
   def test_other_join
     @plugin.join(@msg_other_join)
     assert_equal 3, @state[:names]['#chan'].size
-    assert_event @state[:events]['#chan'].first, 
-      :join, :update, '#chan', 'somedude', nil, '~someuser@server.com'
+    assert_event @state[:events].first, JoinEvent, 'somedude', '#chan', '~someuser@server.com'
   end
   
   def test_self_part
     @plugin.part(@msg_self_part)
     assert_equal nil, @state[:names]['#chan']
     assert_equal nil, @state[:topics]['#chan']
-    assert_equal nil, @state[:events]['#chan']
+    assert_event @state[:events].first, PartEvent, :self, '#chan', 
+      ["~user@server.com", "reason"]
   end
   
   def test_other_part
@@ -106,58 +101,46 @@ class StateManagerPluginTests < Test::Unit::TestCase
     assert_equal ['nick'], @state[:names]['#chan']
     # make sure he didn't leave the other channel!
     assert_equal ['nick', 'name2', 'somenick'], @state[:names]['#chan2']
-    assert_event @state[:events]['#chan'][0], 
-      :part, :server, '#chan', 'somenick', '~someuser@server.com', 'reason'
-    assert_event @state[:events]['#chan'][1], 
-      :part, :update, '#chan', 'somenick', '~someuser@server.com', 'reason'
+    assert_event @state[:events].first, PartEvent, 'somenick', '#chan', 
+      ['~someuser@server.com', 'reason'] # extra info
   end
   
   def test_other_quit
     @plugin.quit(@msg_other_quit)
     assert_equal ['nick'], @state[:names]['#chan']
     assert_equal ['nick', 'name2'], @state[:names]['#chan2']
-    assert_event @state[:events]['#chan'][0], 
-      :quit, :server, '#chan', 'somenick', '~someuser@server.com', 'reason'
-    assert_event @state[:events]['#chan'][1], 
-      :quit, :update, '#chan', 'somenick', '~someuser@server.com', 'reason'
-    assert_event @state[:events]['#chan2'][0], 
-      :quit, :server, '#chan', 'somenick', '~someuser@server.com', 'reason'
+    assert_event @state[:events].last, QuitEvent, 'somenick', '#chan', 
+      ['~someuser@server.com', 'reason'] # extra info
+    assert_event @state[:events].first, QuitEvent, 'somenick', '#chan2', 
+      ['~someuser@server.com', 'reason']
   end
   
   def test_topic
     @plugin.m332(@msg_new_topic)
     assert_equal 'new topic', @state[:topics]['#chan']
-    assert_event @state[:events]['#chan'][0],
-      :topic, :server, '#chan', nil, nil, 'new topic'
-    assert_event @state[:events]['#chan'][1],
-      :topic, :update, '#chan', nil, nil, 'new topic'
+    assert_event @state[:events].first, TopicEvent, nil, '#chan', 'new topic'
   end
   
   def test_topic_change
     @plugin.topic(@msg_topic_change)
     assert_equal 'new topic', @state[:topics]['#chan']
-    assert_event @state[:events]['#chan'][0],
-      :topic, :server, '#chan', 'somenick', nil, 'new topic'
-    assert_event @state[:events]['#chan'][1],
-      :topic, :update, '#chan', 'somenick', nil, 'new topic'
+    assert_event @state[:events].first, TopicEvent, 'somenick', '#chan', 'new topic'
   end
   
   def test_names
     assert_equal 2, @state[:names]['#chan'].size
     @plugin.m353(@msg_names_1)
     assert_equal 5, @state[:names]['#chan'].size
-    assert_event @state[:events]['#chan'].last, 
-      :names, :server, '#chan', nil, 'nick', 'one @two three'
+    # RPL_NAMREPLY includes the user's nickname *shrug*
+    assert_event @state[:events].last, NameListEvent, 'nick', '#chan', 'one @two three'
     @plugin.m353(@msg_names_2)
     assert_equal 8, @state[:names]['#chan'].size
-    assert_event @state[:events]['#chan'].last, 
-      :names, :server, '#chan', nil, 'nick', '@four five @six'
+    assert_event @state[:events].last, NameListEvent, 'nick', '#chan', '@four five @six'
   end
   
   def test_end_of_names
     @plugin.m366(@msg_end_of_names)
-    assert_event( @state[:events]['#chan'][0], 
-      :end_of_names, :update, '#chan', nil, 'nick', 'end of names list')
+    assert_event @state[:events].first, EndOfNamesEvent, nil, '#chan', 'end of names list'
   end
   
   # make sure an event queue doesn't get any larger than it's supposed to
@@ -165,14 +148,13 @@ class StateManagerPluginTests < Test::Unit::TestCase
     (StateManagerPlugin::MAX_EVENT_QUEUE_SIZE+100).times do 
       @plugin.m332(@msg_new_topic)
     end    
-    assert_equal StateManagerPlugin::MAX_EVENT_QUEUE_SIZE, @state[:events]['#chan'].size
+    assert_equal StateManagerPlugin::MAX_EVENT_QUEUE_SIZE, @state[:events].size
   end
   
-  # plugin should autorejoin any channels it was in
+  # plugin should autorejoin any channels it was in if it reconnects
   def test_autorejoin
     # test without any channels first
-    topics = @state[:topics]
-    @state[:topics] = []
+    topics, @state[:topics] = @state[:topics], [] # save 'em for a minute
     @plugin.m001(@msg_welcome)
     assert @queue.empty?
     
@@ -186,13 +168,12 @@ class StateManagerPluginTests < Test::Unit::TestCase
   
   ##### helpers  
   
-  def assert_event(event, type, category, where, from, to, data)
-    assert_equal true, event.is_a?(Event), "event must exist"
-    assert_equal type, event.type, "event.type should be #{type}"
-    assert_equal category, event.category, "event.category should be #{category}"
-    assert_equal from, event.from, "event.from should be #{from}"
-    assert_equal to, event.to, "event.to should be #{to}"
-    assert_equal data, event.data, "event.data should be #{data}"
+  def assert_event(event, event_class, who, where, what)
+    assert_equal true, event.is_a?(Event), "there should be an #{event_class} here."
+    assert_equal true, event.is_a?(event_class), "event should be a #{event_class}"
+    assert_equal who, event.who, 'event.who'
+    assert_equal where, event.where, 'event.where'
+    assert_equal what, event.what, 'event.what'
   end
   
 end

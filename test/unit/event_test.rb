@@ -6,20 +6,21 @@ include IRC
 
 class EventTests < Test::Unit::TestCase
   
-  def test_factory
-    # new_event( type, category, where, from, to, data )
-    e = EventFactory.new_event( :sometype, :somecategory, :where, :from, :to, :data )
+  def test_event_creation
+    e = Event.new(:who, :where, :what)
     now = Time.now
-    assert_equal :sometype, e.type
-    assert_equal :somecategory, e.category
+    assert_equal :who, e.who
     assert_equal :where, e.where
-    assert_equal :from, e.from
-    assert_equal :to, e.to
-    assert_equal :data, e.data
-    assert (now - e.time) <= 1 # shouldn't take more'n a second
-    assert e.id # careful... this better be overridden!
-    e2 = EventFactory.new_event( nil, nil, nil, nil, nil, nil )
-    assert 1, e2.id - e.id # sequential ids from generator
+    assert_equal :what, e.what
+    assert_equal :what, e.data # alias
+    assert (now - e.time) <= 1 # shouldn't take more'n a second!
+    assert e.id
+  end
+  
+  def test_sequential_id
+    one = Event.new(nil, nil, nil)
+    two = Event.new(nil, nil, nil)
+    assert one.id == two.id - 1
   end
   
 end
