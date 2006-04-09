@@ -120,7 +120,7 @@ class IRCConnection
 
   def handle_data(data)
     logger.info "--> " + data.inspect
-    @command_queue.add(DataCommand.new(data))
+    @command_queue << DataCommand.new(data)
   end
   
 end

@@ -15,10 +15,6 @@ class ClientTest < Test::Unit::TestCase
     attr_reader :queue_thread # make queue and quit flag accessible
     def set_quit; @quit = true; end # this is highly implementation-related!
   end
-  # same for Queue
-  class IRC::Queue
-    attr_reader :q
-  end
   # and same for PluginManager, for testing loading of the core plugin
   class IRC::PluginManager
     attr_reader :plugins
@@ -124,7 +120,7 @@ class ClientTest < Test::Unit::TestCase
   def test_quit
     client_connect
     2.times { assert gets_from_server } # clear registration
-    @client.command_queue.add QuitCommand.new('reason')
+    @client.command_queue << QuitCommand.new('reason')
     assert_equal 'QUIT :reason', gets_from_server
     assert_false @client.connection.connected?
   end
@@ -258,8 +254,8 @@ class ClientTest < Test::Unit::TestCase
     @client.set_quit # set the flag after the thread's waiting on the queue
     
     assert @client.queue_thread.alive?, 'race condition encountered, please check'
-    
-    @client.command_queue.add(cmd)
+
+    @client.command_queue << cmd
 
     # there's also another race condition here, one involving scheduling. even if the above
     # is successful, it's possible that the queue thread quits out before anything

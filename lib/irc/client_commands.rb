@@ -54,8 +54,8 @@ class RegisterCommand < QueueCommand
   
   def execute(queue)
     # ENHANCEMENT: add PASSWORD command
-    queue.add SendCommand.new("USER #{@user} 0 * :#{@realname}")
-    queue.add NickCommand.new(@nick)
+    queue << SendCommand.new("USER #{@user} 0 * :#{@realname}")
+    queue << NickCommand.new(@nick)
   end
 end
 
@@ -66,7 +66,7 @@ class NickCommand < QueueConfigStateCommand
   end
   
   def execute(queue,config,state)
-    queue.add SendCommand.new(CMD_NICK + ' ' + @nick)
+    queue << SendCommand.new(CMD_NICK + ' ' + @nick)
     # save the new nick, but don't change the existing nick until the server
     # sends a response back saying it was successful (this is handled elsewhere).
     # yes, this clobbers any existing newnick. if a nick command is executed several times

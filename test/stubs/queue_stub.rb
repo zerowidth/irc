@@ -4,7 +4,7 @@ class QueueStub
     @queue = []
   end
 
-  def add(*elems)
+  def <<(*elems)
     @queue.push(*elems)
   end
 

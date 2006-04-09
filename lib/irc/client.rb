@@ -7,9 +7,8 @@ Client is the main class that ties everything together.
 # network
 require 'irc/connection'
 
-# commands and a queue to put them in
+# client commands
 require 'irc/client_commands'
-require 'irc/command_queue'
 
 # config and state
 require 'irc/config'
@@ -133,7 +132,7 @@ class Client
     # stopped after only one dequeue by setting the quit flag so it exits immediately.
     # this speeds up testing, so until @quit it is!
     until @quit do
-      command = @command_queue.dequeue
+      command = @command_queue.pop
       case command
       # very few plugins will do this, and then only to call quit.
       # everything else should be handled through the queue
@@ -154,7 +153,7 @@ class Client
   end
   
   def register_with_server
-    @command_queue.add( RegisterCommand.new(@config[:nick], @config[:user], @config[:realname]) )
+    @command_queue << RegisterCommand.new(@config[:nick], @config[:user], @config[:realname])
   end
 
 end

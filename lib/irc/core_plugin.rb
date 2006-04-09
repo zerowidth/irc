@@ -36,7 +36,7 @@ class CorePlugin < IRC::Plugin
   def m433(message) # ERR_NICKNAMEINUSE
     @state[:newnick].shift # assumed that nick commands are handled in order
     unless @state[:nick] # nick isn't set during registration, so try a new nick
-      @command_queue.add(NickCommand.new(message.params[1]+'_'))
+      @command_queue << NickCommand.new(message.params[1]+'_')
     end
   end
   
@@ -53,7 +53,7 @@ class CorePlugin < IRC::Plugin
   end
   
   def error(message)
-    @command_queue.add(ReconnectCommand.new)    
+    @command_queue << ReconnectCommand.new
   end
   
 end

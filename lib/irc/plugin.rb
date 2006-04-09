@@ -56,7 +56,7 @@ class Plugin
 
 
   def send_command(command,param_string)
-    @command_queue.add( SendCommand.new("#{command} #{param_string}") )
+    @command_queue << SendCommand.new("#{command} #{param_string}")
   end
   
   # query helpers, use these to ask simple questions about messages  

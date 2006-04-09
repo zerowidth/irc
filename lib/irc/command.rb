@@ -46,9 +46,9 @@ class << QueueCommand
         @data = data
       end
       def execute(command_queue)
-        command_queue.add SendCommand.new("#{command_type} " + @data)
+        command_queue << SendCommand.new("#{command_type} " + @data)
       end
-    }
+    }, __FILE__, __LINE__
   end
 end
 

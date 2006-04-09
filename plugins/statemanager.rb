@@ -46,7 +46,7 @@ class StateManagerPlugin < Plugin
 
   def m001(msg) # RPL_WELCOME, autorejoin
     @state[:topics].each do |chan, topic|
-      @command_queue.add JoinCommand.new(chan)
+      @command_queue << JoinCommand.new(chan)
     end
   end
   

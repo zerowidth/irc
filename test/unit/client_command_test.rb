@@ -1,7 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
 require 'irc/client_commands'
 require 'mocks/connection_mock' # connection mock
-require 'stubs/command_queue_stub' # command queue stub
+require 'stubs/queue_stub' # command queue stub
 
 require 'rubygems'
 require 'flexmock' # for generic mocks

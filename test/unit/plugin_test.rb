@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
 require 'irc/plugin'
-require 'stubs/command_queue_stub'
+require 'stubs/queue_stub'
 
 class PluginTest < Test::Unit::TestCase
   include IRC
