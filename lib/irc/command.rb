@@ -33,7 +33,7 @@ class IRCCommand; end
 class ClientCommand < IRCCommand; end # execute is called with a Client
 class SocketCommand < IRCCommand; end # execute is called with an IRCConnection
 class PluginCommand < IRCCommand; end # execute is called with a PluginManager
-class QueueCommand < IRCCommand; end # execute is called with a CommandQueue
+class QueueCommand < IRCCommand; end # execute is called with a command Queue
 class QueueConfigStateCommand < IRCCommand; end # called with queue, config, and state
 
 # Metaprogramming for simple_queue_command CMD_WHATEV.

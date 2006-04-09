@@ -1,4 +1,4 @@
-class CommandQueueStub
+class QueueStub
   attr_reader :queue
   def initialize
     @queue = []

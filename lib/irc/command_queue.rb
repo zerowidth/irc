@@ -1,5 +1,5 @@
 # initial code found on http://rubygarden.org/ruby?MultiThreading
-# CommandQueue implements a synchronized queue for use by the IRC client, plugins,
+# Queue implements a synchronized queue for use by the IRC client, plugins,
 # and other classes. The client is the only thread that will be reading data from
 # the queue, but all kinds of things will be adding stuff to it
 
@@ -7,7 +7,7 @@ require 'thread' # has Mutex, etc.
 
 module IRC
 
-class CommandQueue
+class Queue
   def initialize
     @q     = []
     @mutex = Mutex.new

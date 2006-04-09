@@ -25,7 +25,7 @@ class ClientCommandTests < Test::Unit::TestCase
     @partcmd = PartCommand.new('#channel')
     
     # stubs:
-    @cq = CommandQueueStub.new
+    @cq = QueueStub.new
     @config = {}
     @state = {}
   end

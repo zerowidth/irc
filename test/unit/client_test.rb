@@ -15,11 +15,11 @@ class ClientTest < Test::Unit::TestCase
     attr_reader :queue_thread # make queue and quit flag accessible
     def set_quit; @quit = true; end # this is highly implementation-related!
   end
-  # same for CommandQueue
-  class IRC::CommandQueue
+  # same for Queue
+  class IRC::Queue
     attr_reader :q
   end
-  # same for PluginManager, for testing loading of the core plugin
+  # and same for PluginManager, for testing loading of the core plugin
   class IRC::PluginManager
     attr_reader :plugins
   end

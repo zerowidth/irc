@@ -5,7 +5,7 @@ require 'stubs/command_queue_stub'
 class StateManagerPluginTests < Test::Unit::TestCase
   
   def setup
-    @queue = CommandQueueStub.new
+    @queue = QueueStub.new
     @config = {}
     @state = {
       :nick => 'nick',

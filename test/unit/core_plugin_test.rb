@@ -18,7 +18,7 @@ class CorePluginTest < Test::Unit::TestCase
   include IRC
   
   def setup
-    @cq = CommandQueueStub.new
+    @cq = QueueStub.new
     @config = {
       :nick => 'nick'
     }

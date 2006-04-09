@@ -1,11 +1,11 @@
 require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
 require 'irc/command_queue'
 
-class CommandQueueTest < Test::Unit::TestCase
+class QueueTest < Test::Unit::TestCase
   include IRC
   
   def setup
-    @cq = CommandQueue.new
+    @cq = Queue.new
   end
   
   def test_basic_queue_functions

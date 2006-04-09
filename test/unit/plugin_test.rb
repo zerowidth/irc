@@ -18,7 +18,7 @@ class PluginTest < Test::Unit::TestCase
   end
   
   def setup 
-    @cq = CommandQueueStub.new
+    @cq = QueueStub.new
     @config = {}
     @state = {:nick=>'rbot'}
     @plugin = TestPlugin.new(@cq, @config, @state)

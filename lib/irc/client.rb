@@ -7,7 +7,7 @@ Client is the main class that ties everything together.
 # network
 require 'irc/connection'
 
-# command queues and handling
+# commands and a queue to put them in
 require 'irc/client_commands'
 require 'irc/command_queue'
 
@@ -40,7 +40,7 @@ class Client
     end
     @logger.level = Logger.const_get(DEFAULT_LOG_LEVEL.to_s.upcase)
 
-    @command_queue = CommandQueue.new
+    @command_queue = Queue.new
     @queue_thread = nil # thread to handle emptying/processing the queue
 
     @config = Config.new(configfile) # this stays the same across all start calls

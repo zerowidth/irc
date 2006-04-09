@@ -15,7 +15,7 @@ class ConnectionTest < Test::Unit::TestCase
   RETRY_WAIT = 0.5
   
   def setup
-    @cq = CommandQueueStub.new # stub so it doesn't rely on actual mutex&stuff implementation
+    @cq = QueueStub.new # stub so it doesn't rely on actual mutex&stuff implementation
     @conn = IRCConnection.new(TEST_HOST, TEST_PORT, @cq, RETRY_WAIT)
     @server = TCPServer.new(TEST_HOST, TEST_PORT)
     @client = nil # client connection, from server
@@ -61,7 +61,7 @@ class ConnectionTest < Test::Unit::TestCase
   end
   
   # test that sending data to the connection results in a DataCommand object in the
-  # (stub) CommandQueue
+  # (stub) Queue
   def test_send_and_receive
     connect
     

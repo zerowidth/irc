@@ -33,7 +33,7 @@ class CommandTest < Test::Unit::TestCase
     assert_raises ArgumentError do
       qc = TestMetaprogrammedQueueCommand.new
     end
-    command_queue = CommandQueueStub.new
+    command_queue = QueueStub.new
     qc = TestMetaprogrammedQueueCommand.new('data')
     assert qc.is_a?(QueueCommand)
     assert_equal 1, qc.method(:execute).arity
