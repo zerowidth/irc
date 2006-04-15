@@ -29,6 +29,8 @@ module IRC
 class Client
   
   attr_reader :config # publically available for pre-run config (set to readonly when started)
+  attr_reader :command_queue # publically available for adding things
+  attr_reader :state # for viewing the client's state
   attr_accessor :logger
   
   def initialize(configfile=nil)

@@ -11,7 +11,7 @@ class ClientTest < Test::Unit::TestCase
   
   # override the class to make it more transparent for testing
   class IRC::Client
-    attr_reader :state, :plugin_manager, :connection, :command_queue # make the basics accessible
+    attr_reader :plugin_manager, :connection # make the basics accessible
     attr_reader :queue_thread # make queue and quit flag accessible
     def set_quit; @quit = true; end # this is highly implementation-related!
   end
