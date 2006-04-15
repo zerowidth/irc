@@ -1,15 +1,9 @@
-# event types:
-# type          category        where   from        to        data
-# -----------------------------------------------------------------------------
-# :motd         :servermessage  nil                           motd string
-# :nickchange   :update         chan/   old nick    new nick  none
-#                               nick
-# :join         :update         chan    nick        nil       ~user@host
-# :names        :servermessage  chan    nil         nick      nick list
-# :end_of_names :update         chan    nil         nick      end of list (server message)
-
 # event types are implemented as a class hierarchy. Event#initialize sets the id and
 # the timestamp.
+
+# event[:who] should be one of three things: a nickname, :self, or :server. nickname should never be
+# set to the client's nickname, as it's not immediately clear (within Event's context) whether 
+# the nickname belongs to this client or not.
 
 module IRC
   

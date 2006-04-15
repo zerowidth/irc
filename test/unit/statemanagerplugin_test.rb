@@ -131,26 +131,29 @@ class StateManagerPluginTests < Test::Unit::TestCase
     assert_equal 2, @state[:names]['#chan'].size
     @plugin.m353(@msg_names_1)
     assert_equal 5, @state[:names]['#chan'].size
-    # RPL_NAMREPLY includes the user's nickname *shrug*
-    assert_event @state[:events].last, NameListEvent, 'nick', '#chan', 'one @two three'
+    # RPL_NAMREPLY includes the user's nickname, but ignore it. 
+    # this should set [:who] to :server, so it's clear that it's a server message
+    assert_event @state[:events].last, NameListEvent, :server, '#chan', 'one @two three'
     @plugin.m353(@msg_names_2)
     assert_equal 8, @state[:names]['#chan'].size
-    assert_event @state[:events].last, NameListEvent, 'nick', '#chan', '@four five @six'
+    assert_event @state[:events].last, NameListEvent, :server, '#chan', '@four five @six'
   end
   
   def test_end_of_names
     @plugin.m366(@msg_end_of_names)
-    assert_event @state[:events].first, EndOfNamesEvent, nil, '#chan', 'end of names list'
+    assert_event @state[:events].first, EndOfNamesEvent, :server, '#chan', 'end of names list'
   end
   
   # make sure an event queue doesn't get any larger than it's supposed to
   def test_max_queue_size
-    (StateManagerPlugin::MAX_EVENT_QUEUE_SIZE+100).times do 
+    # make sure the max size got set first (should be a default in the plugin!)
+    assert @config[:max_event_queue_size]
+    (@config[:max_event_queue_size]+100).times do 
       @plugin.m332(@msg_new_topic)
     end    
-    assert_equal StateManagerPlugin::MAX_EVENT_QUEUE_SIZE, @state[:events].size
+    assert_equal @config[:max_event_queue_size], @state[:events].size
   end
-  
+
   # plugin should autorejoin any channels it was in if it reconnects
   def test_autorejoin
     # test without any channels first

@@ -17,21 +17,24 @@
 #   @state[:topics]['chan']
 # vs.
 #   @state[:channels]['chan'][:topic]
+# and also to allow "global" events which would otherwise lack context
 #
 # :events contains a list of events. This list can only reach a certain size before being 
 # rolled over. The idea is that individual events have unique (incrementing) ids
 # (handled by Event.new) so that other code can query the event list for events since
 # the last one seen, while still maintaining a smaller memory footprint by not logging
 # every event into memory permanently.
+# Please note: this is *not* strictly enforced. It's only enforced within this plugin
+# (for now?) and any other plugin or client can add events to the queue without
+# consequence. Whenever an event gets added within this plugin, however, the event queue
+# will get pruned back down to size.
 #
 
 require 'irc/plugin'
 require 'irc/event'
 include IRC
 class StateManagerPlugin < Plugin
-  
-  MAX_EVENT_QUEUE_SIZE = 3000 # max size of event queue (stored in state for a chan)
-  
+    
   # basic state management - if these happen, keep the state
   register_for CMD_NICK, CMD_JOIN, CMD_PART, CMD_QUIT, CMD_TOPIC
   register_for RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES, RPL_WELCOME
@@ -42,6 +45,8 @@ class StateManagerPlugin < Plugin
     state[:names] ||= {}
     state[:topics] ||= {}
     state[:events] ||= [] # single events list
+    
+    config[:max_event_queue_size] ||= 10000 # set this to a default if necessary
   end
 
   def m001(msg) # RPL_WELCOME, autorejoin if necessary
@@ -112,12 +117,12 @@ class StateManagerPlugin < Plugin
     # TODO: handle opers in channels (@nick) properly
     # ignore ops for now.
     @state[:names][msg.params[2]] |= msg.params[3].split(/\s/).map! {|nick| nick.gsub('@','')} 
-    add_event NameListEvent.new(msg.params[0], msg.params[2], msg.params[3])
+    add_event NameListEvent.new(:server, msg.params[2], msg.params[3])
   end
   
   def m366(msg) # RPL_ENDOFNAMES # inform the client that the names have been updated
     # event to inform the client that the names are finished updating
-    add_event EndOfNamesEvent.new(nil, msg.params[1], msg.params[2])
+    add_event EndOfNamesEvent.new(:server, msg.params[1], msg.params[2])
   end
   
   ##### helpers
@@ -127,10 +132,14 @@ class StateManagerPlugin < Plugin
   end
   
   def add_event(event)
+    # TODO: replace this with a LimitedSizeArray class? probably not that critical
+    # as long as events is generally kept down to size.
     @state[:events] << event
     # keep the list of events pared down
-    while @state[:events].size > MAX_EVENT_QUEUE_SIZE do @state[:events].shift end
+    while @state[:events].size > @config[:max_event_queue_size] do @state[:events].shift end
   end
+  
+  # DRY code:
   
   def topic_change(who, where, topic)
     @state[:topics][where] = topic
