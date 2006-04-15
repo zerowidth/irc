@@ -1,5 +1,4 @@
-require 'irc/plugin'
-require 'irc/cattr_accessor'
+require 'irc/common'
 require 'monitor'
 
 module IRC

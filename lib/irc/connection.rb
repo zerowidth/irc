@@ -7,8 +7,8 @@
 # connects to the server, receives data, and handles reconnects
 
 require 'socket'
+require 'irc/common'
 require 'irc/client_commands' # need DataCommand
-require 'irc/cattr_accessor'
 
 module IRC
   

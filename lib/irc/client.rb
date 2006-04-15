@@ -18,8 +18,10 @@ require 'irc/synchronized_hash'
 require 'irc/plugin_manager'
 require 'irc/core_plugin' # registers core plugin for basic services
 
+# cattr_accessor
+require 'irc/common'
+
 # logging
-require 'irc/cattr_accessor'
 require 'logger'
 
 module IRC

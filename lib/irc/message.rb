@@ -1,5 +1,5 @@
+require 'irc/common'
 require 'irc/rfc2812'
-require 'irc/cattr_accessor'
 
 module IRC
   class Message
