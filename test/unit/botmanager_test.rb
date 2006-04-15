@@ -1,11 +1,16 @@
 require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
 require 'irc/botmanager'
 require 'irc/client'
+require 'irc/client_commands'
 require 'socket' # for basic server
 #require 'mocks/command_mock' # mock command for command execution testing
 
 class BotManagerTest < Test::Unit::TestCase
   include IRC
+  
+  class IRC::BotManager
+    attr_reader :clients
+  end
   
   def setup
     @manager = BotManager.new(File.expand_path(File.dirname(__FILE__)+'/../fixtures/config.yaml'))
@@ -16,33 +21,64 @@ class BotManagerTest < Test::Unit::TestCase
     @server.close
   end
   
-  def test_get_new_clients
-    # these .client calls should return new, different clients
-    one = @manager.client(:one) # use a symbol...
-    two = @manager.client('two') # or a string ... or whatever! it's a hash!
-    assert_false one == two # make sure they're not the same thing
+  def test_first_access_creates_client
+    assert_equal({}, @manager.clients)
+    @manager.get_events('test')
+    assert @manager.clients['test']
+    assert @manager.clients['test'].is_a? IRC::Client
   end
   
-  def test_get_same_client
-    c = @manager.client('client')
-    assert_equal c, @manager.client('client')
-    c.start
-    assert_equal true, c.running?
-    assert_equal true, @manager.client('client').running?
+  def test_config_merge
+    @manager.merge_config('test', {}) # init the client
+    client = @manager.clients['test']
+    assert_equal 10000, client.config[:port] # default (from config.yaml)
+    @manager.merge_config('test', {:port=>6667} )
+    assert_equal 6667, client.config[:port]
   end
   
-  def test_clients_use_config_file
-    c = @manager.client(:c)
-    assert_equal 10000, c.config[:port] # not default, set in config file above
+  def test_start_client
+    @manager.merge_config('test', {:host=>'localhost'} )
+    assert_false @manager.clients['test'].running?
+    @manager.start_client('test')
+    assert @manager.clients['test'].running?
   end
   
-  def test_quit_quits_clients
-    c = @manager.client(:c)
-    assert_equal false, c.running?
-    c.start
-    assert_equal true, c.running?
+  def test_add_and_get_events
+    start_client
+    client = @manager.clients['test']
+    # this initialization depends on if a plugin gets loaded or not
+    assert client.state[:events] == [] || client.state[:events] == nil
+    assert_equal [], @manager.get_events('test')
+    @manager.add_event('test', :foo)
+    assert_equal [:foo], client.state[:events]
+    assert_equal [:foo], @manager.get_events('test')
+  end
+  
+  def test_add_command
+    start_client
+    client = @manager.clients['test']
+    assert client.running?
+    @manager.add_command('test', QuitCommand.new )
+    Thread.new { client.wait_for_quit }.join(0.5) # wait for the quit
+    assert_false client.running?
+  end
+  
+  def test_shutdown_quits_clients
+    start_client
+    assert @manager.clients['test'].running?
     @manager.shutdown
-    assert_equal false, c.running?
+    assert_false @manager.clients['test'].running?
   end
   
+  def test_client_running
+    assert_equal false, @manager.client_running?( 'test' )
+    start_client
+    assert_equal true, @manager.client_running?( 'test' )
+  end
+  
+  def start_client
+    @manager.merge_config('test', {:host=>'localhost'} )
+    @manager.start_client('test')
+  end
+
 end

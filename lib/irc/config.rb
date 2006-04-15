@@ -44,6 +44,10 @@ module IRC
       @config[key] = val
     end
     
+    def merge!(newdata)
+      @config.merge! newdata
+    end
+    
     def readonly?
       @config.frozen?
     end

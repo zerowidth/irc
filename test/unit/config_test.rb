@@ -66,5 +66,11 @@ class ConfigTest < Test::Unit::TestCase
       @config = Config.new('nonexistent-configfile.yaml')
     end
   end
+  
+  def test_config_merge
+    assert_equal 6667, @config[:port]
+    @config.merge!( {:port=>10000} )
+    assert_equal 10000, @config[:port]
+  end
 
 end
