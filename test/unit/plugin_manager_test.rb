@@ -21,6 +21,10 @@ class PluginManagerTest < Test::Unit::TestCase
       record_call(msg.message_type)
     end
     
+    def catchall(msg)
+      record_call :catchall
+    end
+    
     def initialize(*args)
       super(*args)
       record_call(:startup)
@@ -67,7 +71,8 @@ class PluginManagerTest < Test::Unit::TestCase
     
     @private_privmsg = Message.parse ':nathan!~nathan@subdomain.domain.net PRIVMSG rbot :hello there!'
     @general_server_message = Message.parse ':server.com 001 rbot :Welcome to the network: dude!'
-    
+    @unknown_message = Message.parse ':server.com 123 rbot :who knows what this is'
+
   end
   
   def test_registration
@@ -115,7 +120,9 @@ class PluginManagerTest < Test::Unit::TestCase
     assert_equal 'm001', pm.method_for(RPL_WELCOME)
     assert_equal 'm401', pm.method_for(ERR_NOSUCHNICK)
   end
-    
+
+  # test dispatch code
+
   def test_privmsg_dispatch
     assert_dispatch_for(@private_privmsg, CMD_PRIVMSG)
   end
@@ -124,13 +131,13 @@ class PluginManagerTest < Test::Unit::TestCase
     assert_dispatch_for(@general_server_message, RPL_WELCOME)
   end
   
-  def test_thread_cleanup
+  def test_catchall_dispatch
     pm = get_new_pm_with_callrecorder
-    assert_equal 0, pm.threads.size
-    pm.dispatch(@general_server_message)
-    assert_equal 1, pm.threads.size
-    sleep(PluginManager::THREAD_READY_WAIT * 2) # wait for thread cleanup
-    assert_equal 0, pm.threads.size # should be empty again
+    pm.dispatch(@unknown_message)
+    assert_equal 1, pm.threads.size # make sure thread finished
+    assert_equal 1, CallRecorderPlugin.count[:catchall]
+
+#    assert_dispatch_for
   end
   
   def test_nasty_plugin_dispatch
@@ -140,6 +147,15 @@ class PluginManagerTest < Test::Unit::TestCase
     sleep(PluginManager::THREAD_READY_WAIT * 2 )
     # phantom error happening here if the thread doesn't finish fast enough - needed to wait longer
     assert_equal 0, pm.threads.size # if it got this far without exceptions, it's ok
+  end
+  
+  def test_thread_cleanup
+    pm = get_new_pm_with_callrecorder
+    assert_equal 0, pm.threads.size
+    pm.dispatch(@general_server_message)
+    assert_equal 1, pm.threads.size
+    sleep(PluginManager::THREAD_READY_WAIT * 2) # wait for thread cleanup
+    assert_equal 0, pm.threads.size # should be empty again
   end
   
   def test_teardown

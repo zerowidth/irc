@@ -72,6 +72,12 @@ class PluginManager
             @threads << Thread.new { plugin.method(method_name).call(message) }
           end
         end # each do
+      else # no handlers for this command
+        @plugins.each do |plugin|
+          if plugin.respond_to? :catchall then
+            @threads << Thread.new { plugin.catchall(message) }
+          end
+        end
       end # if handler exists
     end # synchronize block
   end

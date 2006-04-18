@@ -1,4 +1,5 @@
 require 'test/unit'
+require 'logger'
 $:.unshift File.expand_path(File.dirname(__FILE__) + "/../lib")
 $:.unshift File.dirname(__FILE__) # for including mocks (require 'mocks/somemock')
 
@@ -17,4 +18,10 @@ end
 # override the default log level
 module IRC
   DEFAULT_LOG_LEVEL = :error
+end
+
+logger = Logger.new(STDOUT)
+logger.level = Logger::ERROR
+[IRC::Plugin, IRC::PluginManager].each do |baseclass|
+  baseclass.logger ||= logger
 end

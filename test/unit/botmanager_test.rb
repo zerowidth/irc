@@ -25,7 +25,7 @@ class BotManagerTest < Test::Unit::TestCase
     assert_equal({}, @manager.clients)
     @manager.get_events('test')
     assert @manager.clients['test']
-    assert @manager.clients['test'].is_a? IRC::Client
+    assert @manager.clients['test'].is_a?( IRC::Client )
   end
   
   def test_config_merge
