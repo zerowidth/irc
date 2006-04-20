@@ -63,7 +63,7 @@ module IRC
     # called by client before starting - gotta make sure everything's set up
     def exception_unless_configured
       required = @config.find_all {|key, val| val == :required }
-      raise ConfigOptionRequired, "Required settings: " + required.inspect + 
+      raise ConfigOptionRequired, "Required settings: " +
         required.map {|key, val| key }.join(', ') unless required.empty?
     end
     
