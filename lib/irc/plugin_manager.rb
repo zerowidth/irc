@@ -11,18 +11,13 @@ class PluginManager
   
   THREAD_READY_WAIT = 0.1 # seconds
   
-  def self.register_plugin(plugin, *commands)
-    @@plugins ||= {}
-    @@plugins[plugin] ||= []
-    commands.each do |command|
-      @@plugins[plugin] << command unless @@plugins[plugin].include? command
-    end
+  def self.register_plugin plugin
+    @@plugins ||= []
+    @@plugins << plugin
   end
 
   def initialize(command_queue, config, state)
 
-    super() # initialize monitor mixin
-    
     # these might not need to be local
     @command_queue = command_queue
     @config = config
@@ -38,74 +33,60 @@ class PluginManager
     load_plugins_from_dir(@config[:plugin_dir]) if @config && @config[:plugin_dir]
 
     @plugins = [] # list of plugins
+    
     @handlers = {} # list of commands for which plugins are registered
     
     @threads = [] # list of threads - run by dispatch, cleaned up by janitor thread
+    @threads.extend(MonitorMixin) # wrap it up for safety
     @janitor = Thread.new { janitor_loop }
     
     # this "freezes" the state of the class variable @@plugins by instantiating everything
     @@plugins ||= {} # just in case
-    @@plugins.each_pair do |plugin_class,commands|
+    @@plugins.uniq.each do |plugin_class|
       # instantiate each plugin
+
       plugin = plugin_class.new(command_queue, config, state)
       @plugins << plugin
-      # record which commands each plugin is registered for
-      commands.each do |command|
-        @handlers[command] ||= []
-        @handlers[command] << plugin
-      end
-      # register the catch-alls as applicable
-      if plugin.respond_to? :catchall
-        @handlers[:catchall] ||= []
-        @handlers[:catchall] << plugin 
-      end
     end
     
   end
   
   def dispatch(message)
-    synchronize do # see teardown
-      type = message.message_type
-      method_name = method_for(type)
-    
-      if @handlers[type]
-        @handlers[type].each do |plugin|
-          if plugin.respond_to? method_name
-            # wrap this call in a thread:
-            # - allows for exception handling elsewhere
-            # - prevents long-running calls from locking up the client
-            @threads << Thread.new { plugin.method(method_name).call(message) }
-          end
-        end # each do
-      else # no handlers for this command
-        if @handlers[:catchall]
-          @handlers[:catchall].each do |plugin|
-            @threads << Thread.new { plugin.catchall(message) }            
-          end
-        end
-      end # if handler exists
-    end # synchronize block
+    method_name = method_for(message.message_type)
+    handlers = handlers_for method_name
+    if handlers == [] then 
+      method_name = :catchall
+      handlers = handlers_for :catchall 
+    end
+    handlers.each do |plugin|
+      # wrap this call in a thread:
+      # - allows for exception handling elsewhere
+      # - prevents long-running calls from locking up the client
+      @threads.synchronize do
+        @threads << Thread.new { plugin.method(method_name).call(message) }
+      end
+    end
   end
   
   # this is pretty much final. tears everything down, including plugins
   # it also kills any currently-running threads
   def teardown
+    # kill any active threads
     # this synchronization is present to prevent additional messages from 
     # being dispatched while teardown is in progress
-    synchronize do
-      # kill any active threads
+    @threads.synchronize do
       @threads.each { |thread| thread.kill }
-
-      # invoke teardown on plugins
-      @plugins.each { |plugin| plugin.teardown }
-
-      # remove dispatcher's ability to do anything
-      @plugins = {}
-      @handlers = {}
-      
-      # commit murder
-      @janitor.kill
     end
+
+    # invoke teardown on plugins
+    @plugins.each { |plugin| plugin.teardown }
+
+    # remove dispatcher's ability to do anything
+    @plugins = {}
+    @handlers = {}
+    
+    # commit murder
+    @janitor.kill
   end
   
   private #############################
@@ -138,20 +119,38 @@ class PluginManager
     type
   end
   
+  def handlers_for method_name
+    unless @handlers[method_name] then
+      @handlers[method_name] = []
+      @plugins.each do |plugin|
+        @handlers[method_name] << plugin if plugin.respond_to? method_name
+      end
+    end
+    @handlers[method_name]
+  end
+  
   def janitor_loop
     loop do
       
       # join up with threads temporarily so exceptions get logged
       begin
         @threads.each { |thread| thread.join(THREAD_READY_WAIT) }
+      rescue ArgumentError => ae
+        # in case of arity problems with dispatches, handle ArgumentError. otherwise
+        # any exceptions will be exceptional, so log 'em
+        logger.error "exception caught in plugin handler thread #{e.inspect}"
+        logger.error e.backtrace[0]
       rescue => e
-        logger.warn "exception caught in plugin handler thread: #{e}"
+        logger.warn "exception caught in plugin handler thread: #{e.inspect}"
         logger.warn e.backtrace[0]
       end
       
-      # delete any threads that are done
-      @threads.delete_if {|thread| !thread.alive?}
-      
+      # delete any threads that are done. synchronized so weirdness doesn't happen
+      # when another dispatch is going on
+      @threads.synchronize do
+        @threads.delete_if {|thread| !thread.alive?}
+      end
+
       sleep(THREAD_READY_WAIT) if @threads.empty? # no wheel-spinning allowed!
     end #loop
   end

@@ -11,7 +11,7 @@ class IRC::SendCommand
 end
 # same for PluginManager, for testing registration of the core plugin
 class IRC::PluginManager
-  attr_reader :plugins, :handlers
+  attr_reader :plugins
 end
 
 class CorePluginTest < Test::Unit::TestCase
@@ -44,21 +44,11 @@ class CorePluginTest < Test::Unit::TestCase
     
   end
   
-  def teardown
-    
-  end
-  
   def test_core_plugin_registration
     pm = PluginManager.new(@cq, @config, @state)
     hasplugin = false # pm.plugins.include? doesn't work, since include? doesn't do kind_of?
     pm.plugins.each { |p| hasplugin ||= p.kind_of?(IRC::CorePlugin) }
     assert hasplugin
-    # check that core plugin got registered for the right things
-    [RPL_WELCOME, CMD_NICK, ERR_NICKNAMEINUSE, ERR_ERRONEUSNICKNAME, 
-      CMD_PING, CMD_ERROR].each do |command|
-      # hacked this instead of assert to get a more verbose error output
-      assert_equal true, pm.handlers[command].is_a?(Array), "not registered for #{command}"
-    end
   end
   
   def test_welcome_message_sets_nick

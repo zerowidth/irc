@@ -8,12 +8,8 @@ Numeric reply methods are prefixed with 'm':
   def privmsg(message) handles CMD_PRIVMSG 
   def m001(message) handles RPL_WELCOME
 
-To register a plugin for a particular command, you can either use
-  register_for(*commands)
-within a Plugin class definition, or explicitly register the plugin
-  PluginManager.register_plugin(plugin_class,*commands)
-
-Also in Plugin, various helpers are defined: reply, reply_command, etc. to reply to a message.
+A plugin is automatically registered with the plugin handler when it inherits from Plugin.
+You can register a plugin explicitly using PluginManager.register_plugin YourPluginClass
 
 =end
 # so plugins can merely require 'irc/plugin' and have access to PluginManager
@@ -34,13 +30,10 @@ class Plugin
   end
   
   # redefine this to perform any cleanup work
+  # this is called before a plugin manager instance shuts down
   def teardown
   end
-  
-  def self.register_for(*commands)
-    PluginManager.register_plugin(self, *commands)
-  end
-  
+    
   private #############################
   # helper methods:
 
@@ -79,6 +72,11 @@ class Plugin
   # (that is, a privmsg or a notice)
   def directed_message?(msg)
     msg.message_type == CMD_PRIVMSG || msg.message_type == CMD_NOTICE
+  end
+  
+  # auto-register any plugin that inherits from Plugin
+  def self.inherited(child_class)
+    PluginManager.register_plugin(child_class)
   end
   
 end

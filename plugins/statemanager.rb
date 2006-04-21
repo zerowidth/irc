@@ -34,11 +34,6 @@ require 'irc/plugin'
 require 'irc/event'
 include IRC
 class StateManagerPlugin < Plugin
-    
-  # basic state management - if these happen, keep the state
-  register_for CMD_NICK, CMD_JOIN, CMD_PART, CMD_QUIT, CMD_TOPIC
-  register_for RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES, RPL_WELCOME
-  register_for CMD_PRIVMSG, CMD_NOTICE
  
 # TODO: add a general queue for part/quit messages to inform the client what happens 
   def initialize(queue,config,state)

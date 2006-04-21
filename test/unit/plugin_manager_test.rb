@@ -48,20 +48,19 @@ class PluginManagerTest < Test::Unit::TestCase
       raise 'KABOOM'
     end
     def m001(msg)
-      sleep(5)
+      sleep 5
     end
-#    def teardown
-#      sleep(0.2)
-#    end
+    def m123 # incorrect arity!
+    end
   end
   
   # expose the guts of plugin manager for thorough testing
   # otherwise it's pretty much a mysterious black box with a minimal interface
   class IRC::PluginManager
-    attr_reader :plugins, :handlers, :threads, :janitor # janitor thread
+    attr_reader :plugins, :threads, :janitor # janitor thread
     public :method_for
-    def self.plugins; @@plugins || {}; end
-    def self.reset_plugins; @@plugins = {}; end # for testing registration code
+    def self.plugins; @@plugins || []; end
+    def self.reset_plugins; @@plugins = []; end # for testing registration code
   end
 
   def setup
@@ -78,38 +77,28 @@ class PluginManagerTest < Test::Unit::TestCase
   def test_registration
     # test that plugin registrations get stored in the class singleton
     assert_equal 0, PluginManager.plugins.size
-    PluginManager.register_plugin(CallRecorderPlugin,CMD_PRIVMSG,RPL_WELCOME)
+    PluginManager.register_plugin CallRecorderPlugin
     assert_equal 1, PluginManager.plugins.size
-    assert_equal 2, PluginManager.plugins[CallRecorderPlugin].size
-    assert_equal CMD_PRIVMSG, PluginManager.plugins[CallRecorderPlugin][0]
-    assert_equal RPL_WELCOME, PluginManager.plugins[CallRecorderPlugin][1]
-    # make sure duplicate registrations are ignored
-    PluginManager.register_plugin(CallRecorderPlugin,CMD_PRIVMSG)
-    assert_equal 1, PluginManager.plugins.size
-    assert_equal 2, PluginManager.plugins[CallRecorderPlugin].size
-    # test that an additional registration gets added
-    PluginManager.register_plugin(CallRecorderPlugin,CMD_NICK)
-    assert_equal 1, PluginManager.plugins.size
-    assert_equal 3, PluginManager.plugins[CallRecorderPlugin].size
-    assert_equal CMD_NICK, PluginManager.plugins[CallRecorderPlugin][2]
   end
   
   def test_instantiation
     # instantiation of the plugin manager class should "freeze" the plugin list
-    # by instantiating everything and recording its registered commands
-    PluginManager.register_plugin(CallRecorderPlugin,CMD_PRIVMSG)
-    PluginManager.register_plugin(NastyPlugin,CMD_PRIVMSG)
-
+    # by instantiating everything
+    PluginManager.register_plugin CallRecorderPlugin
+    PluginManager.register_plugin NastyPlugin
     assert_equal 2, PluginManager.plugins.size
-    
     # instantiate it
     pm = PluginManager.new(nil,nil,nil)
-    
     # check its guts
     assert_equal 2, pm.plugins.size
-    assert_equal 2, pm.handlers.size
-    assert_equal 2, pm.handlers[CMD_PRIVMSG].size
-    
+  end
+  
+  def test_duplicate_registrations_instantiated_once
+    # register it twice
+    PluginManager.register_plugin CallRecorderPlugin
+    PluginManager.register_plugin CallRecorderPlugin
+    pm = PluginManager.new(nil,nil,nil)
+    assert_equal 1, CallRecorderPlugin.count[:startup], 'should only instantiate once'
   end
   
   # test that method naming is determined correctly for commands, since
@@ -136,8 +125,6 @@ class PluginManagerTest < Test::Unit::TestCase
     pm.dispatch(@unknown_message)
     assert_equal 1, pm.threads.size # make sure thread finished
     assert_equal 1, CallRecorderPlugin.count[:catchall]
-
-#    assert_dispatch_for
   end
   
   def test_nasty_plugin_dispatch
@@ -149,11 +136,18 @@ class PluginManagerTest < Test::Unit::TestCase
     assert_equal 0, pm.threads.size # if it got this far without exceptions, it's ok
   end
   
+  def test_nasty_plugin_dispatch_incorrect_args
+    pm = get_new_pm_with_nasty
+    pm.dispatch @unknown_message
+  end
+  
   def test_thread_cleanup
     pm = get_new_pm_with_callrecorder
     assert_equal 0, pm.threads.size
     pm.dispatch(@general_server_message)
     assert_equal 1, pm.threads.size
+    # thread will be sleeping, so kill it and then wait for the cleanup
+    pm.threads.first.kill
     sleep(PluginManager::THREAD_READY_WAIT * 2) # wait for thread cleanup
     assert_equal 0, pm.threads.size # should be empty again
   end
@@ -164,11 +158,9 @@ class PluginManagerTest < Test::Unit::TestCase
     assert_equal 1, CallRecorderPlugin.count[:startup]
     assert_equal nil, CallRecorderPlugin.count[:teardown]
     assert_equal 1, pm.plugins.size
-    assert_equal 3, pm.handlers.size
     pm.teardown
     assert_equal 1, CallRecorderPlugin.count[:teardown]
     assert_equal 0, pm.plugins.size
-    assert_equal 0, pm.handlers.size
   end
   
   # make sure no dispatches go out while teardown is happening
@@ -190,7 +182,6 @@ class PluginManagerTest < Test::Unit::TestCase
     # only the test plugin should be registered for RPL_TOPIC
     assert_equal 1, pm.plugins.size, 'TestPlugin should have been registered'
     assert_equal TestPlugin, pm.plugins.first.class
-    assert pm.handlers[RPL_TOPIC] # should be registered for this
   end
   
   def test_load_plugins_from_invalid_dir
@@ -202,18 +193,18 @@ class PluginManagerTest < Test::Unit::TestCase
   ##### helpers
   
   def get_new_pm_with_callrecorder
-    PluginManager.register_plugin(CallRecorderPlugin,RPL_WELCOME,CMD_PRIVMSG)
+    PluginManager.register_plugin CallRecorderPlugin
     PluginManager.new(nil,nil,nil) # returns
   end
   
   def get_new_pm_with_nasty
-    PluginManager.register_plugin(NastyPlugin,CMD_PRIVMSG,RPL_WELCOME)
+    PluginManager.register_plugin NastyPlugin
     PluginManager.new(nil,nil,nil)
   end
 
   # helper for dispatch testing
   def assert_dispatch_for(message,command)
-    PluginManager.register_plugin(CallRecorderPlugin,command)
+    PluginManager.register_plugin CallRecorderPlugin
     pm = PluginManager.new(nil,nil,nil)
     assert_equal nil, CallRecorderPlugin.count[command]
     pm.dispatch(message)
