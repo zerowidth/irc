@@ -1,9 +1,10 @@
 # event types are implemented as a class hierarchy. Event#initialize sets the id and
 # the timestamp.
 
-# event[:who] should be one of three things: a nickname, :self, or :server. nickname should never be
+# event.who should be one of three things: a nickname, :self, or :server. nickname should never be
 # set to the client's nickname, as it's not immediately clear (within Event's context) whether 
 # the nickname belongs to this client or not.
+# event.where should be set to the channel or :self if directed to the current nick, for the same reason
 
 module IRC
   
@@ -33,16 +34,21 @@ module IRC
 
   
   # individual events
-  
-  class TopicEvent < Event; end # topic change in a channel, or when joining
     
+  # channel-related:
   class JoinEvent < Event; end # joining a channel
   class PartEvent < Event; end # leaving a channel
   class QuitEvent < Event; end # quitting the server
-    
+  class TopicEvent < Event; end # topic change in a channel, or when joining
   class NickChangeEvent < Event; end # self nick change
-    
   class NameListEvent < Event; end # server is listing names in a chan
   class EndOfNamesEvent < Event; end # server is done listing names in a chan
+
+  # message-related:
+  class PrivMsgEvent < Event; end # private message, either to a chan or to a person
+  class NoticeEvent < Event; end # notice event, either to a chan or to a person
+  
+  # etc.
+  class UnknownServerMessage < Event; end # catchall for unknown server messages
   
 end

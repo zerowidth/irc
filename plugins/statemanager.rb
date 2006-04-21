@@ -38,6 +38,7 @@ class StateManagerPlugin < Plugin
   # basic state management - if these happen, keep the state
   register_for CMD_NICK, CMD_JOIN, CMD_PART, CMD_QUIT, CMD_TOPIC
   register_for RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES, RPL_WELCOME
+  register_for CMD_PRIVMSG, CMD_NOTICE
  
 # TODO: add a general queue for part/quit messages to inform the client what happens 
   def initialize(queue,config,state)
@@ -123,6 +124,21 @@ class StateManagerPlugin < Plugin
   def m366(msg) # RPL_ENDOFNAMES # inform the client that the names have been updated
     # event to inform the client that the names are finished updating
     add_event EndOfNamesEvent.new(:server, msg.params[1], msg.params[2])
+  end
+  
+  ##### messaging
+  
+  def privmsg(msg)
+    where = destination_of(msg)
+    where = :self if where == @state[:nick]
+    add_event PrivMsgEvent.new(msg.prefix[:nick], where, msg.params[1])
+  end
+  
+  def notice(msg)
+    who = msg.prefix[:nick] || :server
+    where = destination_of(msg)
+    where = :self if where == @state[:nick]
+    add_event NoticeEvent.new(who, where, msg.params[1])
   end
   
   ##### helpers

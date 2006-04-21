@@ -107,7 +107,7 @@ class PluginManagerTest < Test::Unit::TestCase
     
     # check its guts
     assert_equal 2, pm.plugins.size
-    assert_equal 1, pm.handlers.size
+    assert_equal 2, pm.handlers.size
     assert_equal 2, pm.handlers[CMD_PRIVMSG].size
     
   end
@@ -164,7 +164,7 @@ class PluginManagerTest < Test::Unit::TestCase
     assert_equal 1, CallRecorderPlugin.count[:startup]
     assert_equal nil, CallRecorderPlugin.count[:teardown]
     assert_equal 1, pm.plugins.size
-    assert_equal 2, pm.handlers.size
+    assert_equal 3, pm.handlers.size
     pm.teardown
     assert_equal 1, CallRecorderPlugin.count[:teardown]
     assert_equal 0, pm.plugins.size

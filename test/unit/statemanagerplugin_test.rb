@@ -43,6 +43,14 @@ class StateManagerPluginTests < Test::Unit::TestCase
     @msg_names_2 = Message.parse(':server.com 353 nick @ #chan :@four five @six')
     @msg_end_of_names = Message.parse(':server.com 366 nick #chan :end of names list')
     
+    @msg_privmsg = Message.parse(':somenick!~someuser@server.com PRIVMSG #chan :hello')
+    @msg_privmsg_private = Message.parse(':somenick!~someuser@server.com PRIVMSG nick :hello')
+    @msg_privmsg_action = Message.parse(":somenick!~someuser@server.com PRIVMSG #chan :\001ACTION hello\001")
+    
+    @msg_notice = Message.parse(':somenick!~someuser@server.com NOTICE #chan :hello')
+    @msg_notice_private = Message.parse(':somenick!~someuser@server.com NOTICE nick :hello')
+    @msg_notice_server = Message.parse(':server.com NOTICE nick :hello')
+    
     @msg_welcome = Message.parse(':server.com 001 :Welcome to the network')
   end
   
@@ -142,6 +150,36 @@ class StateManagerPluginTests < Test::Unit::TestCase
   def test_end_of_names
     @plugin.m366(@msg_end_of_names)
     assert_event @state[:events].first, EndOfNamesEvent, :server, '#chan', 'end of names list'
+  end
+  
+  def test_privmsg
+    @plugin.privmsg(@msg_privmsg)
+    assert_event @state[:events].first, PrivMsgEvent, 'somenick', '#chan', 'hello'
+  end
+  
+  def test_private_privmsg
+    @plugin.privmsg(@msg_privmsg_private)
+    assert_event @state[:events].first, PrivMsgEvent, 'somenick', :self, 'hello'
+  end
+  
+  def test_privmsg_with_action
+    @plugin.privmsg(@msg_privmsg_action)
+    assert_event @state[:events].first, PrivMsgEvent, 'somenick', '#chan', "\001ACTION hello\001"
+  end
+  
+  def test_notice
+    @plugin.notice(@msg_notice)
+    assert_event @state[:events].first, NoticeEvent, 'somenick', '#chan', 'hello'
+  end
+  
+  def test_private_notice
+    @plugin.notice(@msg_notice_private)
+    assert_event @state[:events].first, NoticeEvent, 'somenick', :self, 'hello'
+  end
+  
+  def test_server_notice
+    @plugin.notice(@msg_notice_server)
+    assert_event @state[:events].first, NoticeEvent, :server, :self, 'hello'
   end
   
   # make sure an event queue doesn't get any larger than it's supposed to

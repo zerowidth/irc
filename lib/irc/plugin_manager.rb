@@ -54,6 +54,11 @@ class PluginManager
         @handlers[command] ||= []
         @handlers[command] << plugin
       end
+      # register the catch-alls as applicable
+      if plugin.respond_to? :catchall
+        @handlers[:catchall] ||= []
+        @handlers[:catchall] << plugin 
+      end
     end
     
   end
@@ -73,9 +78,9 @@ class PluginManager
           end
         end # each do
       else # no handlers for this command
-        @plugins.each do |plugin|
-          if plugin.respond_to? :catchall then
-            @threads << Thread.new { plugin.catchall(message) }
+        if @handlers[:catchall]
+          @handlers[:catchall].each do |plugin|
+            @threads << Thread.new { plugin.catchall(message) }            
           end
         end
       end # if handler exists
