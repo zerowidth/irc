@@ -42,6 +42,13 @@ class PluginManagerTest < Test::Unit::TestCase
     end
   end
   
+  class DuplicatePluginOne < CallRecorderPlugin; 
+    def m123 msg
+      record_call :m123
+    end
+  end
+  class DuplicatePluginTwo < CallRecorderPlugin; end
+  
   # raises an exception, to test how dispatch code handles exceptions
   class NastyPlugin < Plugin
     def privmsg(msg)
@@ -71,6 +78,7 @@ class PluginManagerTest < Test::Unit::TestCase
     @private_privmsg = Message.parse ':nathan!~nathan@subdomain.domain.net PRIVMSG rbot :hello there!'
     @general_server_message = Message.parse ':server.com 001 rbot :Welcome to the network: dude!'
     @unknown_message = Message.parse ':server.com 123 rbot :who knows what this is'
+    @unknown_message_two = Message.parse ':server.com 124 rbot :who knows what this is'
 
   end
   
@@ -140,6 +148,23 @@ class PluginManagerTest < Test::Unit::TestCase
     pm = get_new_pm_with_nasty
     pm.dispatch @unknown_message
   end
+  
+  # if anything is registered for m123 (which One is) then the new dispatch code
+  # won't call catchall on anything else. this tests for that, to make sure it's fixed.
+  def test_proper_dispatch_handling
+    PluginManager.register_plugin DuplicatePluginOne # handles m123
+    PluginManager.register_plugin DuplicatePluginTwo
+    pm = PluginManager.new nil, nil, nil
+    pm.dispatch @unknown_message # m123
+    # call recorder uses CallRecorderPlugin class var to record, using that:
+    assert_equal 1, CallRecorderPlugin.count[:m123]
+    assert_equal 1, CallRecorderPlugin.count[:catchall], 'catchall should have been invoked'
+    # now, make sure catchall gets called twice for another unknown:
+    pm.dispatch @unknown_message_two # m124, nothing handles this
+    assert_equal 3, CallRecorderPlugin.count[:catchall], 'catchall should have been invoked twice more'
+  end
+  
+  # cleanup/teardown
   
   def test_thread_cleanup
     pm = get_new_pm_with_callrecorder

@@ -54,18 +54,10 @@ class PluginManager
   def dispatch(message)
     method_name = method_for(message.message_type)
     handlers = handlers_for method_name
-    if handlers == [] then 
-      method_name = :catchall
-      handlers = handlers_for :catchall 
-    end
-    handlers.each do |plugin|
-      # wrap this call in a thread:
-      # - allows for exception handling elsewhere
-      # - prevents long-running calls from locking up the client
-      @threads.synchronize do
-        @threads << Thread.new { plugin.method(method_name).call(message) }
-      end
-    end
+    # use only the catchall handlers for plugins that don't already handle this message
+    catchalls = ( handlers_for :catchall ) - handlers
+    handlers.each { |plugin| dispatch_to_thread plugin, method_name, message }
+    catchalls.each { |plugin| dispatch_to_thread plugin, :catchall, message }
   end
   
   # this is pretty much final. tears everything down, including plugins
@@ -127,6 +119,15 @@ class PluginManager
       end
     end
     @handlers[method_name]
+  end
+  
+  def dispatch_to_thread plugin, method_name, message
+    # wrap this call in a thread:
+    # - allows for exception handling elsewhere
+    # - prevents long-running calls from locking up the client
+    @threads.synchronize do
+      @threads << Thread.new { plugin.method(method_name).call(message) }
+    end
   end
   
   def janitor_loop
