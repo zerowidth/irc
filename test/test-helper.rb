@@ -17,11 +17,11 @@ end
 
 # override the default log level
 module IRC
-  DEFAULT_LOG_LEVEL = :error
+  DEFAULT_LOG_LEVEL = :fatal
 end
 
 logger = Logger.new(STDOUT)
-logger.level = Logger::ERROR
+logger.level = Logger::FATAL
 [IRC::Plugin, IRC::PluginManager].each do |baseclass|
   baseclass.logger ||= logger
 end

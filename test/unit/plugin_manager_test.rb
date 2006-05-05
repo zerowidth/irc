@@ -149,18 +149,18 @@ class PluginManagerTest < Test::Unit::TestCase
     pm.dispatch @unknown_message
   end
   
-  # if anything is registered for m123 (which One is) then the new dispatch code
-  # won't call catchall on anything else. this tests for that, to make sure it's fixed.
+  # if anything is registered for m123 (which One is) then the new dispatch code (revision 60something)
+  # didn't call catchall on any other plugins. this tests for that, to make sure it's fixed.
   def test_proper_dispatch_handling
     PluginManager.register_plugin DuplicatePluginOne # handles m123
     PluginManager.register_plugin DuplicatePluginTwo
     pm = PluginManager.new nil, nil, nil
-    pm.dispatch @unknown_message # m123
+    pm.dispatch @unknown_message # m123, only One handles this, Two doesn't
     # call recorder uses CallRecorderPlugin class var to record, using that:
     assert_equal 1, CallRecorderPlugin.count[:m123]
     assert_equal 1, CallRecorderPlugin.count[:catchall], 'catchall should have been invoked'
     # now, make sure catchall gets called twice for another unknown:
-    pm.dispatch @unknown_message_two # m124, nothing handles this
+    pm.dispatch @unknown_message_two # m124, neither handles this
     assert_equal 3, CallRecorderPlugin.count[:catchall], 'catchall should have been invoked twice more'
   end
   

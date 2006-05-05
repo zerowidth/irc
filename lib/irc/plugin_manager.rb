@@ -136,7 +136,7 @@ class PluginManager
       # join up with threads temporarily so exceptions get logged
       begin
         @threads.each { |thread| thread.join(THREAD_READY_WAIT) }
-      rescue ArgumentError => ae
+      rescue ArgumentError => e
         # in case of arity problems with dispatches, handle ArgumentError. otherwise
         # any exceptions will be exceptional, so log 'em
         logger.error "exception caught in plugin handler thread #{e.inspect}"
