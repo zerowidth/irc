@@ -51,3 +51,4 @@ end
 # end
 
 # Include your application configuration below
+Client.drb_uri = 'druby://localhost:56239' # unlikely collision!
