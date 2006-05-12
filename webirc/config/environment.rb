@@ -15,6 +15,7 @@ Rails::Initializer.run do |config|
   
   # Skip frameworks you're not going to use
   # config.frameworks -= [ :action_web_service, :action_mailer ]
+  config.frameworks -= [ :action_mailer ]
 
   # Add additional load paths for your own custom dirs
   # config.load_paths += %W( #{RAILS_ROOT}/extras )
@@ -52,3 +53,9 @@ end
 
 # Include your application configuration below
 Client.drb_uri = 'druby://localhost:56239' # unlikely collision!
+
+DEFAULT_NICKNAME = 'webirc_user'
+DEFAULT_REALNAME = 'webirc user'
+DEFAULT_SERVER = 'f3h.com'
+DEFAULT_PORT = 6667
+DEFAULT_CHANNEL = '#'

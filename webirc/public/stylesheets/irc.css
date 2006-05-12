@@ -1,0 +1,8 @@
+label {
+  float: left;
+  clear: left;
+  display: block;
+}
+label > input {
+
+}
