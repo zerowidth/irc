@@ -63,11 +63,24 @@ class BotManagerTest < Test::Unit::TestCase
     assert_false client.running?
   end
   
+  def test_shutdown_of_single_client
+    start_client :one
+    start_client :two
+    assert @manager.clients[:one].running?
+    assert @manager.clients[:two].running?
+    @manager.shutdown(:one)
+    assert_false @manager.clients[:one].running?
+    assert @manager.clients[:two].running?
+  end
+  
   def test_shutdown_quits_clients
-    start_client
-    assert @manager.clients['test'].running?
+    start_client :one
+    start_client :two
+    assert @manager.clients[:one].running?
+    assert @manager.clients[:two].running?
     @manager.shutdown
-    assert_false @manager.clients['test'].running?
+    assert_false @manager.clients[:one].running?
+    assert_false @manager.clients[:two].running?
   end
   
   def test_client_running
@@ -76,9 +89,9 @@ class BotManagerTest < Test::Unit::TestCase
     assert_equal true, @manager.client_running?( 'test' )
   end
   
-  def start_client
-    @manager.merge_config('test', {:host=>'localhost'} )
-    @manager.start_client('test')
+  def start_client(client_name = 'test')
+    @manager.merge_config(client_name, {:host=>'localhost'} )
+    @manager.start_client(client_name)
   end
 
 end

@@ -45,12 +45,17 @@ module IRC
       get_client(client_name).command_queue << command
     end
       
-    def shutdown
-      @clients.each_value do |client|
-        if client && client.running?
-          client.quit('bot manager shutting down')
+    def shutdown(client_name = nil)
+      msg = 'bot manager shutting down'
+      if client_name
+        @clients[client_name].quit(msg) if @clients[client_name] and @clients[client_name].running?
+      else # quit all
+        @clients.each_value do |client|
+          if client and client.running?
+            client.quit msg
+          end
         end
-      end
+      end # if
     end
     
     private
