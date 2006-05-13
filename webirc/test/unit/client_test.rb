@@ -33,4 +33,41 @@ class ClientTest < Test::Unit::TestCase
     assert events_since_first.first.id > @manager.events.first.id, 'should have excluded the first event'
   end
   
+  def test_connected
+    @client.connected? # make the call
+    assert @manager.calls[:client_running?].size > 0, "should delegate :client_running? to bot manager"
+  end
+  
+  def test_client_connect
+    defaults = { :nick => 'nick', :realname => 'realname', :server => 'server', :port => 12345, :channel => '#chan'}
+    connection_details = Connection.new defaults
+    @client.connect connection_details
+    # test that the manager received the correct messages:
+    assert @manager.calls[:merge_config], "manager should receive :merge_config"
+    assert_equal :client_name, @manager.calls[:merge_config].first.flatten[0], "client name must be sent"
+    assert_equal defaults, @manager.calls[:merge_config].first.flatten[1], "manager should receive hash"
+    assert @manager.calls[:start_client], "manager should receive :start_client"
+    assert_equal :client_name, @manager.calls[:start_client].first.flatten[0]
+  end
+  
+  def test_client_shutdown
+    @client.shutdown
+    assert @manager.calls[:shutdown]
+    assert_equal :client_name, @manager.calls[:shutdown].first.flatten[0], "client name is required"
+  end
+  
+  def test_add_event
+    @client.add_event(:event) # doesn't really matter what the event is, just add it!
+    assert @manager.calls[:add_event], "should receive :add_event"
+    assert_equal :client_name, @manager.calls[:add_event].first.flatten[0], "client name is required"
+    assert_equal :event, @manager.calls[:add_event].first.flatten[1], "should receive the event as an argument"
+  end
+  
+  def test_add_command
+    @client.add_command(:command)
+    assert @manager.calls[:add_command], "should receive :add_command"
+    assert_equal :client_name, @manager.calls[:add_command].first.flatten[0], "client name is required"
+    assert_equal :command, @manager.calls[:add_command].first.flatten[1], "should receive the event as an argument"
+  end
+  
 end

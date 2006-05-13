@@ -9,6 +9,8 @@ class ConnectionTest < Test::Unit::TestCase
     @conn.server = 'server.com'
     @conn.port = 6667
     @conn.channel = '#chan'
+    
+    @options = {:nick => 'n', :realname => 'r', :server => 's', :port => 1, :channel => 'c'}
   end
   
   def test_basic
@@ -16,7 +18,7 @@ class ConnectionTest < Test::Unit::TestCase
   end
   
   def test_creation_with_options
-    conn = Connection.new :nick => 'n', :realname => 'r', :server => 's', :port => 1, :channel => 'c'
+    conn = Connection.new @options
     assert_equal 'n', conn.nick
     assert_equal 'r', conn.realname
     assert_equal 's', conn.server
@@ -27,8 +29,6 @@ class ConnectionTest < Test::Unit::TestCase
   def test_nick_validation
     @conn.nick = nil
     assert_equal(false, @conn.valid?)
-    # nick must only be: 
-    @conn.nick = ''
   end
   
   def test_realname_validation
@@ -50,4 +50,10 @@ class ConnectionTest < Test::Unit::TestCase
     @conn.channel = '#foo'
     assert(@conn.valid?, "channel should be valid!")
   end
+  
+  def test_to_hash
+    conn = Connection.new @options
+    assert_equal @options, conn.to_hash
+  end
+
 end

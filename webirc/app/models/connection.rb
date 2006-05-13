@@ -13,5 +13,14 @@ class Connection
     self.port = opts[:port]
     self.channel = opts[:channel]
   end
+  
+  def to_hash
+    { :nick => self.nick, 
+      :realname => self.realname, 
+      :server => self.server, 
+      :port => self.port, 
+      :channel => self.channel
+    }
+  end
 
 end

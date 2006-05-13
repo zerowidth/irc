@@ -21,8 +21,30 @@ class Client
     # this could definitely be optimized.
     # TODO improve this interface with the client/manager to retrieve events since a certain id
     events = @manager.get_events(@client_name)
-    return events if events.last.id < id # easy case
+    return events if events.first.id > id # easy case, first event in the queue is newer than anything we've seen
     events.find_all {|event| event.id > id}
+  end
+  
+  def connected?
+    @manager.client_running? @client_name
+  end
+  
+  # establish a connection (or try to) using the connection details.
+  def connect(connection)
+    @manager.merge_config @client_name, connection.to_hash
+    @manager.start_client @client_name
+  end
+  
+  def shutdown
+    @manager.shutdown(@client_name)
+  end
+  
+  def add_event(event)
+    @manager.add_event @client_name, event
+  end
+  
+  def add_command(command)
+    @manager.add_command @client_name, command
   end
 
 end
