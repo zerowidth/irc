@@ -16,7 +16,12 @@ class ConnectionTest < Test::Unit::TestCase
   end
   
   def test_creation_with_options
-    
+    conn = Connection.new :nick => 'n', :realname => 'r', :server => 's', :port => 1, :channel => 'c'
+    assert_equal 'n', conn.nick
+    assert_equal 'r', conn.realname
+    assert_equal 's', conn.server
+    assert_equal 1, conn.port
+    assert_equal 'c', conn.channel
   end
 
   def test_nick_validation
@@ -42,8 +47,6 @@ class ConnectionTest < Test::Unit::TestCase
   end
   
   def test_channel_validation
-    @conn.channel = nil
-    assert_equal(false, @conn.valid?)
     @conn.channel = '#foo'
     assert(@conn.valid?, "channel should be valid!")
   end

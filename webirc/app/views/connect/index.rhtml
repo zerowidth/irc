@@ -1,8 +1,8 @@
-<% form_for :gnar, @connection, :url => {:action => 'connect'} do |f| %>
+<% form_for :connection, @connection do |f| -%>
   <label for="nick">Nickname: <%= f.text_field :nick %></label>
   <label for="realname">Real Name: <%= f.text_field :realname %></label>
   <label for="server">Server: <%= f.text_field :server %></label>
   <label for="port">Port: <%= f.text_field :port %></label>
   <label for="channel">Channel: <%= f.text_field :channel %></label>
   <%= submit_tag 'connect' %>
-<% end %>
+<% end -%>

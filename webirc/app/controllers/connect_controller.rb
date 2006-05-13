@@ -14,7 +14,7 @@ class ConnectController < ApplicationController
     # validate is called always, so errors are accessible if not postback
     if @connection.valid? && request.post?
       session[:connection] = @connection
-      redirect_to :controller => 'irc'
+      redirect_to :controller => 'irc', :action => 'connect'
     end
   end
 end
