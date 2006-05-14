@@ -4,25 +4,15 @@ Client is the main class that ties everything together.
 
 =end
 
-# network
-require 'irc/connection'
-
-# client commands
-require 'irc/client_commands'
-
-# config and state
-require 'irc/config'
-require 'irc/synchronized_hash'
-
-# plugins and dispatch
-require 'irc/plugin_manager'
+require 'irc/connection' # network
+require 'irc/client_commands' # client commands
+require 'irc/config' # config
+require 'irc/synchronized_hash' # state
+require 'irc/plugin_manager' # plugins and dispatch
 require 'irc/core_plugin' # registers core plugin for basic services
+require 'irc/common' # cattr_accessor
 
-# cattr_accessor
-require 'irc/common'
-
-# logging
-require 'logger'
+require 'logger' # logging
 
 module IRC
   
