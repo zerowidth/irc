@@ -2,7 +2,7 @@ require 'drb'
 
 class Client
 
-  cattr_accessor :drb_uri
+  cattr_accessor :drb_uri # set this in environment.rb
   
   attr_accessor :client_name
 

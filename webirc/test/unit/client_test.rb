@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/../test_helper'
 
 require 'drb'
 require 'irc/event'
-require 'test/mocks/mockmanager' # mock bot manager
+require 'mockmanager' # mock bot manager
 
 class ClientTest < Test::Unit::TestCase
 
