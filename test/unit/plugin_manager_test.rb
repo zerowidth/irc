@@ -205,8 +205,8 @@ class PluginManagerTest < Test::Unit::TestCase
   def test_load_plugins_from_dir
     pm = PluginManager.new(nil,{:plugin_dir=>'test/fixtures'},nil)
     # only the test plugin should be registered for RPL_TOPIC
-    assert_equal 1, pm.plugins.size, 'TestPlugin should have been registered'
-    assert_equal TestPlugin, pm.plugins.first.class
+    assert_equal 1, pm.plugins.size, 'ExamplePlugin should have been registered'
+    assert_equal ExamplePlugin, pm.plugins.first.class
   end
   
   def test_load_plugins_from_invalid_dir
