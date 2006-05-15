@@ -4,7 +4,7 @@ class UserTest < Test::Unit::TestCase
   # Be sure to include AuthenticatedTestHelper in test/test_helper.rb instead.
   # Then, you can remove it from this and the functional test.
   include AuthenticatedTestHelper
-  fixtures :users
+  fixtures :users, :connection_prefs
 
   def test_should_create_user
     assert_difference User, :count do
@@ -52,6 +52,10 @@ class UserTest < Test::Unit::TestCase
 
   def test_should_authenticate_user
     assert_equal users(:quentin), User.authenticate('quentin', 'quentin')
+  end
+  
+  def test_user_has_connection_pref
+    assert_equal connection_prefs(:quentin), users(:quentin).connection_pref
   end
 
   protected

@@ -61,7 +61,7 @@ class ClientTest < Test::Unit::TestCase
   
   def test_client_connect
     defaults = { :nick => 'nick', :realname => 'realname', :server => 'server', :port => 12345, :channel => '#chan'}
-    connection_details = Connection.new defaults
+    connection_details = ConnectionPref.new defaults
     @client.connect connection_details
     # test that the manager received the correct messages:
     assert @proxy.calls[:merge_config], "proxy object should receive :merge_config"
