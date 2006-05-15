@@ -13,7 +13,7 @@ require 'irc_controller'
 class IrcController; def rescue_action(e) raise e end; end
 
 class IrcControllerTest < Test::Unit::TestCase
-  fixtures :users
+  fixtures :users, :connection_prefs
   include AuthenticatedTestHelper # for user login, which is used here for client identification
   
   def setup
@@ -47,6 +47,25 @@ class IrcControllerTest < Test::Unit::TestCase
   end
 
   def test_connect
+    @proxy.running = false
     get :connect
+    assert_redirected_to :action => 'index'
+    assert @proxy.running
   end
+  
+  def test_connect_without_pref
+    login_as :arthur # doesn't have a connection pref
+    get :connect
+    assert_redirected_to :controller => 'connect'
+  end
+  
+  def test_login_required
+    @request.session[:user] = nil
+    [:login, :connect].each do |controller|
+      assert_requires_login do
+        get :controller
+      end
+    end
+  end
+  
 end
