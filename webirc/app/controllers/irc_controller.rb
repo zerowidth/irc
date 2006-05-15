@@ -1,3 +1,4 @@
+require 'irc/event'
 class IrcController < ApplicationController
   include AuthenticatedSystem # TODO move this to ApplicationController
   before_filter :login_required
@@ -5,6 +6,8 @@ class IrcController < ApplicationController
   def index
     client = Client.new(current_user)
     redirect_to :controller => 'connect', :action => 'index' and return unless client.connected?
+    @events = client.events
+    session[:last_event] = @events.last.id if @events && @events.size > 0
     render_text 'asdf'
   end
   

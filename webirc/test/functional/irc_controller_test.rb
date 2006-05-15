@@ -7,7 +7,7 @@ require 'irc_controller'
 # DRb server, so the DRb service will need to be initialized anywhere the client is being
 # used in a test.
 # ==> End result is, I've had to push anything that I needed to set selectively
-# (connected flag) down to the mock manager level (or the mock proxy object)
+# (connected flag) down to the mock manager level (or the mock proxy object). no big deal
 
 # Re-raise errors caught by the controller.
 class IrcController; def rescue_action(e) raise e end; end
@@ -44,6 +44,14 @@ class IrcControllerTest < Test::Unit::TestCase
     @proxy.running = true
     get :index
     assert_success
+    assert assigns(:events), 'should assign @events'
+    assert_nil session[:last_event]
+    5.times { @proxy.add_event IRC::Event.new(nil,nil,nil) }
+    get :index
+    assert_success
+    assert assigns(:events), 'should assign @events'
+    assert_equal 5, assigns(:events).size, 'there should be 5 events'
+    assert_equal @proxy.events.last.id, session[:last_event]
   end
 
   def test_connect
