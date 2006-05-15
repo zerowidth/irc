@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class ConnectionTest < Test::Unit::TestCase
-
+  fixture :connections
   def setup
     @conn = Connection.new
     @conn.nick = 'nick'

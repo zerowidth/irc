@@ -17,3 +17,6 @@ config.action_controller.perform_caching             = false
 # The :test delivery method accumulates sent emails in the
 # ActionMailer::Base.deliveries array.
 config.action_mailer.delivery_method = :test
+
+# TODO add more stuff here
+Client.drb_uri = 'druby://localhost:12345'

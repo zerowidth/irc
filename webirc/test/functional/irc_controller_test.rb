@@ -1,14 +1,13 @@
 require File.dirname(__FILE__) + '/../test_helper'
 require 'irc_controller'
-require 'mockmanager'
 
 # This is kind of an odd situation: I'd prefer to use a Client mock selectively for just
 # the irc_controller test, but since it reopens the model class, it affects everything else.
-# The Client unit testing relies on setting up a mock bot manager on the remote end of a
+# The Client unit testing relies on setting up a mock manager on the remote end of a
 # DRb server, so the DRb service will need to be initialized anywhere the client is being
 # used in a test.
 # ==> End result is, I've had to push anything that I needed to set selectively
-# (connected flag) down to the mock manager level.
+# (connected flag) down to the mock manager level (or the mock proxy object)
 
 # Re-raise errors caught by the controller.
 class IrcController; def rescue_action(e) raise e end; end
@@ -23,7 +22,8 @@ class IrcControllerTest < Test::Unit::TestCase
     @response   = ActionController::TestResponse.new
     
     # set up the mock for the client
-    @manager = MockManager.new
+    @proxy = MockProxy.new
+    @manager = MockManager.new @proxy
     DRb.start_service(Client.drb_uri, @manager)
     
     # set the current user
@@ -35,13 +35,13 @@ class IrcControllerTest < Test::Unit::TestCase
   end
 
   def test_index_when_not_connected
-    @manager.client_running = false
+    @proxy.running = false
     get :index
     assert_redirected_to :controller => 'connect'
   end
   
   def test_index_when_connected
-    @manager.client_running = true
+    @proxy.running = true
     get :index
     assert_success
   end

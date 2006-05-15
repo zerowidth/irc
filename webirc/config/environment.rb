@@ -56,6 +56,6 @@ Client.drb_uri = 'druby://localhost:56239' # unlikely collision!
 
 DEFAULT_NICKNAME = 'webirc_user'
 DEFAULT_REALNAME = 'webirc user'
-DEFAULT_SERVER = 'f3h.com'
+DEFAULT_SERVER = 'server.com'
 DEFAULT_PORT = 6667
 DEFAULT_CHANNEL = '#'

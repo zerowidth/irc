@@ -14,13 +14,12 @@ the bot manager. The bot manager handles instantiation and configuration.
 
 ClientProxy provides indirect access to:
 - event queue
-  - add_event
-  - get_events
+  - add_event(event)
+  - events
 - command queue
-  - add_command
+  - add_command(command)
 - state
-  - state() # ?
-  - state() = # ?
+  - state(key)
 =end 
 
 require 'drb'
@@ -75,7 +74,6 @@ class ClientProxy
   def add_command(command)
     @client.command_queue << command
   end
-
 
 end
 end # module
