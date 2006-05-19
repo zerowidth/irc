@@ -34,6 +34,18 @@ class ConnectionPrefTest < Test::Unit::TestCase
     def test_user_relationship
       assert_equal users(:quentin), connection_prefs(:quentin).user
     end
+    
+    def test create_with_defaults
+      # only testing one default here, but if one works, the others probably do too
+      conn = ConnectionPref.new_with_defaults
+      assert_equal DEFAULT_NICK, conn.nick
+    end
+    
+    def test_create_with_defaults_and_hash
+      conn = ConnectionPref.new_with_defaults :nick => 'asdf'
+      assert_equal DEFAULT_SERVER, conn.server
+      assert_equal 'asdf', conn.nick
+    end
 
   # channel is optional  
   #   def test_channel_validation

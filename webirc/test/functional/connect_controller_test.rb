@@ -20,11 +20,13 @@ class ConnectControllerTest < Test::Unit::TestCase
 
   def test_index_with_no_prior_prefs
       login_as :arthur # has no connection prefs associated with him
-      assert_no_difference ConnectionPref, :count do
+      assert_difference ConnectionPref, :count, 1 do # should create a new ConnectionPref in the db
         get :index
-        assert assigns(:connection) # should create a connection object
+        assert assigns(:connection) 
+        assigns(:connection).errors
         assert assigns(:connection).valid?, 'default connection should be valid'
-        assert_equal DEFAULT_NICKNAME, assigns(:connection).nick, "should create connection with defaults"
+        assert_equal DEFAULT_SERVER, assigns(:connection).server, "should create connection with defaults"
+        assert_equal 'arthur', assigns(:connection).nick, "should set default to login if it's a new record"
         assert_success
     end
   end

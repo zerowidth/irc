@@ -45,6 +45,7 @@ class IrcControllerTest < Test::Unit::TestCase
     get :index
     assert_success
     assert assigns(:events), 'should assign @events'
+    assert_equal users(:quentin).id, @manager.calls[:client].first[0]
     assert_nil session[:last_event]
     5.times { @proxy.add_event IRC::Event.new(nil,nil,nil) }
     get :index
@@ -58,6 +59,7 @@ class IrcControllerTest < Test::Unit::TestCase
     @proxy.running = false
     get :connect
     assert_redirected_to :action => 'index'
+    assert_equal users(:quentin).id, @manager.calls[:client].first[0]
     assert @proxy.running
   end
   
