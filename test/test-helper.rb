@@ -3,6 +3,9 @@ require 'logger'
 $:.unshift File.expand_path(File.dirname(__FILE__) + "/../lib")
 $:.unshift File.dirname(__FILE__) # for including mocks (require 'mocks/somemock')
 
+require 'rubygems'
+require 'active_support/core_ext/kernel/reporting' # for silence_warnings
+
 puts "loading test helper"
 
 # load the irc files
@@ -17,7 +20,9 @@ end
 
 # override the default log level
 module IRC
-  DEFAULT_LOG_LEVEL = :fatal
+  silence_warnings do
+    DEFAULT_LOG_LEVEL = :fatal
+  end
 end
 
 logger = Logger.new(STDOUT)
