@@ -1,4 +1,5 @@
 require 'irc/client'
+require 'irc/client_proxy'
 require 'drb'
 
 module IRC

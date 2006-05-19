@@ -34,7 +34,7 @@ require 'irc/plugin'
 require 'irc/event'
 include IRC
 class StateManagerPlugin < Plugin
- 
+
 # TODO: add a general queue for part/quit messages to inform the client what happens 
   def initialize(queue,config,state)
     super(queue,config,state)
@@ -134,6 +134,11 @@ class StateManagerPlugin < Plugin
     where = destination_of(msg)
     where = :self if where == @state[:nick]
     add_event NoticeEvent.new(who, where, msg.params[1])
+  end
+  
+  ##### catchall
+  def catchall(msg)
+    add_event UnknownServerEvent.new(:server, destination_of(msg), msg.params[0])
   end
   
   ##### helpers

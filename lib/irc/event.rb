@@ -30,7 +30,7 @@ module IRC
       @@id += 1
       [@@id, Time.now]
     end
-  end  
+  end
 
   
   # individual events
@@ -49,6 +49,6 @@ module IRC
   class NoticeEvent < Event; end # notice event, either to a chan or to a person
   
   # etc.
-  class UnknownServerMessage < Event; end # catchall for unknown server messages
+  class UnknownServerEvent < Event; end # catchall for unknown server messages
   
 end

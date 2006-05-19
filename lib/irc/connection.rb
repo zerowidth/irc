@@ -66,6 +66,7 @@ class IRCConnection
   
   def connect
     raise "already connected" if connected?
+    logger.info "attempting to connect to #{@host}:#{@port}"
     @socket = TCPSocket.open(@host, @port)
   end
   

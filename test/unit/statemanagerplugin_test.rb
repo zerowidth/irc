@@ -52,6 +52,8 @@ class StateManagerPluginTests < Test::Unit::TestCase
     @msg_notice_server = Message.parse(':server.com NOTICE nick :hello')
     
     @msg_welcome = Message.parse(':server.com 001 :Welcome to the network')
+    
+    @msg_unknown = Message.parse(':server.com 210 :RPL_TRACERECONNECT is unused')
   end
   
   def test_registration
@@ -182,6 +184,11 @@ class StateManagerPluginTests < Test::Unit::TestCase
     assert_event @state[:events].first, NoticeEvent, :server, :self, 'hello'
   end
   
+  def test_catchall
+    @plugin.catchall(@msg_unknown)
+    assert_event @state[:events].first, UnknownServerEvent, :server, "nick", "RPL_TRACERECONNECT is unused"
+  end
+
   # make sure an event queue doesn't get any larger than it's supposed to
   def test_max_queue_size
     # make sure the max size got set first (should be a default in the plugin!)

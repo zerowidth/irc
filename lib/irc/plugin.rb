@@ -8,6 +8,10 @@ Numeric reply methods are prefixed with 'm':
   def privmsg(message) handles CMD_PRIVMSG 
   def m001(message) handles RPL_WELCOME
 
+If you need catchall functionality,     
+  def catchall(message) will be called with any message that isn't explicitly handled
+If catchall isn't defined, it won't be called, so no worries there.
+
 A plugin is automatically registered with the plugin handler when it inherits from Plugin.
 You can register a plugin explicitly using PluginManager.register_plugin YourPluginClass
 
