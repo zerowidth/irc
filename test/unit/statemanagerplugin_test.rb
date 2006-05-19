@@ -1,5 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
-require File.expand_path(File.dirname(__FILE__) + "/../../plugins/statemanager")
+require "irc/plugins/statemanager"
 require 'stubs/queue_stub'
 
 class StateManagerPluginTests < Test::Unit::TestCase

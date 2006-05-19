@@ -52,6 +52,9 @@ end
 # end
 
 # Include your application configuration below
+
+require 'irc/plugins/statemanager'
+
 Client.drb_uri = 'druby://localhost:56239' # unlikely collision!
 
 DEFAULT_NICKNAME = 'webirc_user'
