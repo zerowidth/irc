@@ -12,14 +12,12 @@ module IRC
   # of events for use by external clients (e.g. Rails app).
   class Event
     attr_reader :id, :time
-    attr_accessor :who, :where, :what
+    attr_accessor :who, :where, :what, :context
     alias :data :what # sometimes this makes more sense (semantically)
     
-    def initialize(who, where, what)
+    def initialize(opts = {})
       @id, @time = Event.new_instance_info
-      @who = who
-      @where = where
-      @what = what
+      @who, @where, @what, @context = opts[:who], opts[:where], opts[:what], opts[:context]
     end
     
     private

@@ -55,8 +55,9 @@ class StateManagerPlugin < Plugin
     @state[:names].each_pair do |chan, namelist|
       if idx = namelist.index( msg.prefix[:nick] )
         namelist[idx] = msg.params[0]
-        add_event NickChangeEvent.new(
-          self_or_nick(msg.prefix[:nick]), chan, msg.params[0] )
+        add_event NickChangeEvent.new \
+          :who => msg.prefix[:nick], :where => chan, :what => msg.params[0], :context => self_or_nil(msg.prefix[:nick])
+#          self_or_nick(msg.prefix[:nick]), chan, msg.params[0] )
       end
     end
     # TODO: privmsg/query handling
@@ -73,8 +74,8 @@ class StateManagerPlugin < Plugin
       @state[:topics][msg.params[0]] = ""
     else # someone else is joining
       @state[:names][msg.params[0]] << msg.prefix[:nick]
-      add_event JoinEvent.new(msg.prefix[:nick], msg.params[0], 
-        "#{msg.prefix[:user]}@#{msg.prefix[:host]}" )
+      add_event JoinEvent.new( :who => msg.prefix[:nick], :where => msg.params[0], 
+        :what => "#{msg.prefix[:user]}@#{msg.prefix[:host]}" )
     end
   end
   
@@ -85,8 +86,8 @@ class StateManagerPlugin < Plugin
     else
       @state[:names][msg.params[0]].delete(msg.prefix[:nick])
     end
-    add_event PartEvent.new( self_or_nick(msg.prefix[:nick]), msg.params[0],
-      ["#{msg.prefix[:user]}@#{msg.prefix[:host]}", msg.params[1] ]   )
+    add_event PartEvent.new( :who => msg.prefix[:nick], :where => msg.params[0],
+      :what => ["#{msg.prefix[:user]}@#{msg.prefix[:host]}", msg.params[1] ], :context => self_or_nil(msg.prefix[:nick]) )
   end
   
   def quit(msg)
@@ -95,8 +96,8 @@ class StateManagerPlugin < Plugin
     @state[:names].each_pair do |chan,namelist|
       if idx = namelist.index(msg.prefix[:nick])
         namelist.delete_at(idx)
-        add_event QuitEvent.new(msg.prefix[:nick], chan, 
-          ["#{msg.prefix[:user]}@#{msg.prefix[:host]}", msg.params[0] ] )
+        add_event QuitEvent.new( :who => msg.prefix[:nick], :where => chan, 
+          :what => ["#{msg.prefix[:user]}@#{msg.prefix[:host]}", msg.params[0] ] )
       end
     end
   end
@@ -113,38 +114,49 @@ class StateManagerPlugin < Plugin
     # TODO: handle opers in channels (@nick) properly
     # ignore ops for now.
     @state[:names][msg.params[2]] |= msg.params[3].split(/\s/).map! {|nick| nick.gsub('@','')} 
-    add_event NameListEvent.new(:server, msg.params[2], msg.params[3])
+    add_event NameListEvent.new( :who => msg.prefix[:server], :where => msg.params[2], 
+      :what => msg.params[3], :context => :server )
   end
   
   def m366(msg) # RPL_ENDOFNAMES # inform the client that the names have been updated
     # event to inform the client that the names are finished updating
-    add_event EndOfNamesEvent.new(:server, msg.params[1], msg.params[2])
+    add_event EndOfNamesEvent.new( :who => msg.prefix[:server], :where => msg.params[1],
+      :what => msg.params[2], :context => :server )
   end
   
   ##### messaging
   
   def privmsg(msg)
     where = destination_of(msg)
-    where = :self if where == @state[:nick]
-    add_event PrivMsgEvent.new(msg.prefix[:nick], where, msg.params[1])
+    add_event PrivMsgEvent.new( :who => msg.prefix[:nick], :where => where, :what => msg.params[1],
+      :context => self_or_nil(where) )
   end
   
   def notice(msg)
-    who = msg.prefix[:nick] || :server
+    who = msg.prefix[:nick] || msg.prefix[:server]
     where = destination_of(msg)
-    where = :self if where == @state[:nick]
-    add_event NoticeEvent.new(who, where, msg.params[1])
+    context = self_or_nil(where)
+    context = :server if msg.prefix[:server]
+    add_event NoticeEvent.new( :who => who, :where => where, :what => msg.params[1], 
+      :context => context )
   end
   
   ##### catchall
   def catchall(msg)
-    add_event UnknownServerEvent.new(:server, destination_of(msg), msg.params[0])
+    context = self_or_server(msg)
+    add_event UnknownServerEvent.new(:who => msg.prefix[:nick] || msg.prefix[:server], 
+      :where => destination_of(msg), :what => msg.params[0], :context => self_or_server(msg) )
   end
   
   ##### helpers
   
-  def self_or_nick(nick)
-    nick == @state[:nick] ? :self : nick
+  def self_or_nil(nick)
+    nick == @state[:nick] ? :self : nil
+  end
+  
+  def self_or_server(msg)
+    return self_or_nil(msg.prefix[:nick]) if msg.prefix[:nick]
+    return :server if msg.prefix[:server]
   end
   
   def add_event(event)
@@ -159,7 +171,7 @@ class StateManagerPlugin < Plugin
   
   def topic_change(who, where, topic)
     @state[:topics][where] = topic
-    add_event TopicEvent.new(who, where, topic)
+    add_event TopicEvent.new(:who => who, :where => where, :what => topic)
   end
 
 end

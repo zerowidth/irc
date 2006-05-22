@@ -65,8 +65,10 @@ class StateManagerPluginTests < Test::Unit::TestCase
     @plugin.nick(@msg_change_own_nick)
     assert_equal 'newnick', @state[:names]['#chan'][1]
     # should be an event listed in every channel
-    assert_event @state[:events].last, NickChangeEvent, :self, '#chan', 'newnick'
-    assert_event @state[:events].first, NickChangeEvent, :self, '#chan2', 'newnick'
+    assert_event @state[:events].last, NickChangeEvent,
+      :who => 'nick', :where => '#chan', :what => 'newnick', :context => :self
+    assert_event @state[:events].first, NickChangeEvent,
+      :who => 'nick', :where => '#chan2', :what => 'newnick', :context => :self
   end
   
   # should update all instances of somenick with somenick2 and add event (one per chan)
@@ -75,10 +77,12 @@ class StateManagerPluginTests < Test::Unit::TestCase
     assert_equal 'somenick2', @state[:names]['#chan'][0]
     assert_equal 'somenick2', @state[:names]['#chan2'][2]
     # event should exist for all current channels
-    assert_event @state[:events][1], NickChangeEvent, 'somenick', '#chan', 'somenick2'
-    assert_event @state[:events][0], NickChangeEvent, 'somenick', '#chan2', 'somenick2'
+    assert_event @state[:events][1], NickChangeEvent, 
+      :who => 'somenick', :where => '#chan', :what => 'somenick2', :context => nil
+    assert_event @state[:events][0], NickChangeEvent, 
+      :who => 'somenick', :where => '#chan2', :what => 'somenick2', :context => nil
 
-    # TODO: private message gets updated with new name 
+    # TODO: private message gets updated with new name? 
     # TODO: is this a good idea? might b0rk the front-end app, by changing tab title or anything
   end
 
@@ -95,15 +99,16 @@ class StateManagerPluginTests < Test::Unit::TestCase
   def test_other_join
     @plugin.join(@msg_other_join)
     assert_equal 3, @state[:names]['#chan'].size
-    assert_event @state[:events].first, JoinEvent, 'somedude', '#chan', '~someuser@server.com'
+    assert_event @state[:events].first, JoinEvent, 
+      :who => 'somedude', :where => '#chan', :what => '~someuser@server.com', :context => nil
   end
   
   def test_self_part
     @plugin.part(@msg_self_part)
     assert_equal nil, @state[:names]['#chan']
     assert_equal nil, @state[:topics]['#chan']
-    assert_event @state[:events].first, PartEvent, :self, '#chan', 
-      ["~user@server.com", "reason"]
+    assert_event @state[:events].first, PartEvent, 
+      :who => 'nick', :where => '#chan', :what => ["~user@server.com", "reason"], :context => :self
   end
   
   def test_other_part
@@ -111,30 +116,32 @@ class StateManagerPluginTests < Test::Unit::TestCase
     assert_equal ['nick'], @state[:names]['#chan']
     # make sure he didn't leave the other channel!
     assert_equal ['nick', 'name2', 'somenick'], @state[:names]['#chan2']
-    assert_event @state[:events].first, PartEvent, 'somenick', '#chan', 
-      ['~someuser@server.com', 'reason'] # extra info
+    assert_event @state[:events].first, PartEvent, 
+      :who => 'somenick', :where => '#chan', :what => ['~someuser@server.com', 'reason'] # extra info
   end
   
   def test_other_quit
     @plugin.quit(@msg_other_quit)
     assert_equal ['nick'], @state[:names]['#chan']
     assert_equal ['nick', 'name2'], @state[:names]['#chan2']
-    assert_event @state[:events].last, QuitEvent, 'somenick', '#chan', 
-      ['~someuser@server.com', 'reason'] # extra info
-    assert_event @state[:events].first, QuitEvent, 'somenick', '#chan2', 
-      ['~someuser@server.com', 'reason']
+    assert_event @state[:events].last, QuitEvent, 
+      :who => 'somenick', :where => '#chan', :what => ['~someuser@server.com', 'reason'] # extra info
+    assert_event @state[:events].first, QuitEvent, 
+      :who => 'somenick', :where => '#chan2', :what => ['~someuser@server.com', 'reason']
   end
   
   def test_topic
     @plugin.m332(@msg_new_topic)
     assert_equal 'new topic', @state[:topics]['#chan']
-    assert_event @state[:events].first, TopicEvent, nil, '#chan', 'new topic'
+    assert_event @state[:events].first, TopicEvent, 
+      :who => nil, :where => '#chan', :what => 'new topic'
   end
   
   def test_topic_change
     @plugin.topic(@msg_topic_change)
     assert_equal 'new topic', @state[:topics]['#chan']
-    assert_event @state[:events].first, TopicEvent, 'somenick', '#chan', 'new topic'
+    assert_event @state[:events].first, TopicEvent, 
+      :who => 'somenick', :where => '#chan', :what => 'new topic'
   end
   
   def test_names
@@ -143,50 +150,60 @@ class StateManagerPluginTests < Test::Unit::TestCase
     assert_equal 5, @state[:names]['#chan'].size
     # RPL_NAMREPLY includes the user's nickname, but ignore it. 
     # this should set [:who] to :server, so it's clear that it's a server message
-    assert_event @state[:events].last, NameListEvent, :server, '#chan', 'one @two three'
+    assert_event @state[:events].last, NameListEvent, 
+      :who => 'server.com', :where => '#chan', :what => 'one @two three', :context => :server
     @plugin.m353(@msg_names_2)
     assert_equal 8, @state[:names]['#chan'].size
-    assert_event @state[:events].last, NameListEvent, :server, '#chan', '@four five @six'
+    assert_event @state[:events].last, NameListEvent, 
+      :who => 'server.com', :where => '#chan', :what => '@four five @six', :context => :server
   end
   
   def test_end_of_names
     @plugin.m366(@msg_end_of_names)
-    assert_event @state[:events].first, EndOfNamesEvent, :server, '#chan', 'end of names list'
+    assert_event @state[:events].first, EndOfNamesEvent, 
+      :who => 'server.com', :where => '#chan', :what => 'end of names list', :context => :server
   end
   
   def test_privmsg
     @plugin.privmsg(@msg_privmsg)
-    assert_event @state[:events].first, PrivMsgEvent, 'somenick', '#chan', 'hello'
+    assert_event @state[:events].first, PrivMsgEvent, 
+      :who => 'somenick', :where => '#chan', :what => 'hello'
   end
   
   def test_private_privmsg
     @plugin.privmsg(@msg_privmsg_private)
-    assert_event @state[:events].first, PrivMsgEvent, 'somenick', :self, 'hello'
+    assert_event @state[:events].first, PrivMsgEvent, 
+      :who => 'somenick', :where => 'nick', :what => 'hello', :context => :self
   end
   
   def test_privmsg_with_action
     @plugin.privmsg(@msg_privmsg_action)
-    assert_event @state[:events].first, PrivMsgEvent, 'somenick', '#chan', "\001ACTION hello\001"
+    assert_event @state[:events].first, PrivMsgEvent, 
+      :who => 'somenick', :where => '#chan', :what => "\001ACTION hello\001"
   end
   
   def test_notice
     @plugin.notice(@msg_notice)
-    assert_event @state[:events].first, NoticeEvent, 'somenick', '#chan', 'hello'
+    assert_event @state[:events].first, NoticeEvent, 
+      :who => 'somenick', :where => '#chan', :what => 'hello', :context => nil
   end
   
   def test_private_notice
     @plugin.notice(@msg_notice_private)
-    assert_event @state[:events].first, NoticeEvent, 'somenick', :self, 'hello'
+    assert_event @state[:events].first, NoticeEvent, 
+      :who => 'somenick', :where => 'nick', :what => 'hello', :context => :self
   end
   
   def test_server_notice
     @plugin.notice(@msg_notice_server)
-    assert_event @state[:events].first, NoticeEvent, :server, :self, 'hello'
+    assert_event @state[:events].first, NoticeEvent, 
+      :who => 'server.com', :where => 'nick', :what => 'hello', :context => :server
   end
   
   def test_catchall
     @plugin.catchall(@msg_unknown)
-    assert_event @state[:events].first, UnknownServerEvent, :server, "nick", "RPL_TRACERECONNECT is unused"
+    assert_event @state[:events].first, UnknownServerEvent, 
+      :who => 'server.com', :where => "nick", :what => "RPL_TRACERECONNECT is unused", :context => :server
   end
 
   # make sure an event queue doesn't get any larger than it's supposed to
@@ -216,12 +233,12 @@ class StateManagerPluginTests < Test::Unit::TestCase
   
   ##### helpers  
   
-  def assert_event(event, event_class, who, where, what)
-    assert_equal true, event.is_a?(Event), "there should be an #{event_class} here."
+  def assert_event(event, event_class, required_hash)
+    assert_equal true, event.is_a?(Event), "the event should be an Event or subclass}"
     assert_equal true, event.is_a?(event_class), "event should be a #{event_class}"
-    assert_equal who, event.who, 'event.who'
-    assert_equal where, event.where, 'event.where'
-    assert_equal what, event.what, 'event.what'
+    required_hash.each do |key,val|
+      assert_equal val, event.send(key), "event.#{key} should be #{val}"
+    end
   end
   
 end
