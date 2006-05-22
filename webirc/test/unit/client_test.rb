@@ -29,14 +29,14 @@ class ClientTest < Test::Unit::TestCase
   def test_events
     assert_equal [], @client.events, 'events should be an empty array'
     assert @proxy.calls[:events]
-    @proxy.add_event IRC::Event.new(:who, :where, :what) # this should work!
+    @proxy.add_event IRC::Event.new # this should work!
     assert @client.events.size > 0
   end
   
   def test_events_since
     # add test data
     5.times do
-      @proxy.add_event IRC::Event.new(nil, nil, nil)
+      @proxy.add_event IRC::Event.new
     end
     
     # test base case

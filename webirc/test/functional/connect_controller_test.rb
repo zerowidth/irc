@@ -70,4 +70,9 @@ class ConnectControllerTest < Test::Unit::TestCase
     end
   end
   
+  def test_drb_connection_error
+    DRb.stop_service # will cause Client calls to fail
+    assert_raises(DRb::DRbConnError) { get :index }
+  end
+  
 end

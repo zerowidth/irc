@@ -47,7 +47,7 @@ class IrcControllerTest < Test::Unit::TestCase
     assert assigns(:events), 'should assign @events'
     assert_equal users(:quentin).id, @manager.calls[:client].first[0]
     assert_nil session[:last_event]
-    5.times { @proxy.add_event IRC::Event.new(nil,nil,nil) }
+    5.times { @proxy.add_event IRC::Event.new }
     get :index
     assert_success
     assert assigns(:events), 'should assign @events'
