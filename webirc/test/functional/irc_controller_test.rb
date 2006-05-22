@@ -29,17 +29,17 @@ class IrcControllerTest < Test::Unit::TestCase
     # set the current user
     login_as :quentin
   end
-  
+
   def teardown
     DRb.stop_service
   end
 
-  def test_index_when_not_connected
+  def test_redirect_when_not_connected
     @proxy.running = false
     get :index
-    assert_redirected_to :controller => 'connect'
+    assert_redirected_to :controller => 'connect', :action => 'index'
   end
-  
+
   def test_index_when_connected
     @proxy.running = true
     get :index
@@ -55,26 +55,24 @@ class IrcControllerTest < Test::Unit::TestCase
     assert_equal @proxy.events.last.id, session[:last_event]
   end
 
-  def test_connect
-    @proxy.running = false
-    get :connect
-    assert_redirected_to :action => 'index'
-    assert_equal users(:quentin).id, @manager.calls[:client].first[0]
-    assert @proxy.running
-  end
-  
-  def test_connect_without_pref
-    login_as :arthur # doesn't have a connection pref
-    get :connect
-    assert_redirected_to :controller => 'connect'
-  end
-  
+#   def test_connect
+#     @proxy.running = false
+#     get :connect
+#     assert_redirected_to :action => 'index'
+#     assert_equal users(:quentin).id, @manager.calls[:client].first[0]
+#     assert @proxy.running
+#   end
+
+#   def test_connect_without_pref
+#     login_as :arthur # doesn't have a connection pref
+#     get :connect
+#     assert_redirected_to :controller => 'connect'
+#   end
+
   def test_login_required
     @request.session[:user] = nil
-    [:login, :connect].each do |controller|
-      assert_requires_login do
-        get :controller
-      end
+    assert_requires_login do
+      get :index
     end
   end
   

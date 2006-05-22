@@ -6,6 +6,12 @@ class Client
   
 #  attr_accessor :client_name
 
+  # Client.for(some_user)
+  def self.for(user)
+#    manager = DRbObject.new_with_uri drb_uri
+    Client.new user.id
+  end
+
   # this will connect to a DRb server and retrieve a client proxy object
   def initialize client_name
     @client_name = client_name

@@ -5,6 +5,8 @@ require 'irc/event'
 #require 'mockmanager' # mock bot manager
 
 class ClientTest < Test::Unit::TestCase
+  
+  fixtures :users
 
   def setup
     @proxy = MockProxy.new
@@ -92,6 +94,13 @@ class ClientTest < Test::Unit::TestCase
   def test_state
     @proxy.set_state :foo=>'foo'
     assert_equal 'foo', @client.state(:foo)
+  end
+  
+  def test_client_for
+    c = Client.for(users(:quentin))
+    assert @manager.calls[:client]
+    assert_equal users(:quentin).id, @manager.calls[:client][1][0]
+    assert_kind_of Client, c
   end
   
 end
