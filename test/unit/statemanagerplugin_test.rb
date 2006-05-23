@@ -203,7 +203,7 @@ class StateManagerPluginTests < Test::Unit::TestCase
   def test_catchall
     @plugin.catchall(@msg_unknown)
     assert_event @state[:events].first, UnknownServerEvent, 
-      :who => 'server.com', :where => "nick", :what => "RPL_TRACERECONNECT is unused", :context => :server
+      :who => 'server.com', :where => "nick", :what => @msg_unknown.params, :context => :server
   end
 
   # make sure an event queue doesn't get any larger than it's supposed to

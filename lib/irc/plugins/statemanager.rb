@@ -145,7 +145,7 @@ class StateManagerPlugin < Plugin
   def catchall(msg)
     context = self_or_server(msg)
     add_event UnknownServerEvent.new(:who => msg.prefix[:nick] || msg.prefix[:server], 
-      :where => destination_of(msg), :what => msg.params[0], :context => self_or_server(msg) )
+      :where => destination_of(msg), :what => msg.params, :context => self_or_server(msg) )
   end
   
   ##### helpers
