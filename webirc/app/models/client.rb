@@ -31,7 +31,7 @@ class Client
     # i don't quite like this: it dumps a lot of data across the network every time
     # this could definitely be optimized.
     # TODO improve this interface with the client/manager to retrieve events since a certain id
-    events.find_all {|event| event.id > id}
+    id ? events.find_all {|event| event.id > id} : events
   end
   
   def connected?

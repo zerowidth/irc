@@ -20,6 +20,10 @@ class ConnectControllerTest < Test::Unit::TestCase
     # set up the mock for the client TODO DRY this up, this is repeated elsewhere
     @proxy = MockProxy.new
     @manager = MockManager.new @proxy
+    assert_raises(DRb::DRbConnError, 
+      "ERROR: DRb service is already running at #{Client.drb_uri}! Cannot continue testing") do
+      DRbObject.new_with_uri(Client.drb_uri).some_method # the method call is what causes the error
+    end
     DRb.start_service(Client.drb_uri, @manager)
   end
   
@@ -52,6 +56,8 @@ class ConnectControllerTest < Test::Unit::TestCase
       post :index, :connection => 
         {:nick => 'nick', :realname => 'realname', :server => 'server', :port => 6667, :channel => '#chan'}
       assert_redirected_to :controller => 'irc', :action => 'index'
+      assert @proxy.calls[:start], 'client should be started'
+      assert @proxy.running?, 'client should be running!'
     end
   end
   
@@ -72,6 +78,7 @@ class ConnectControllerTest < Test::Unit::TestCase
   
   def test_drb_connection_error
     DRb.stop_service # will cause Client calls to fail
+    assert_raises(DRb::DRbConnError) { Client.new(:name) }
     assert_raises(DRb::DRbConnError) { get :index }
   end
   

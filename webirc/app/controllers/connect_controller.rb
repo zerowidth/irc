@@ -25,10 +25,13 @@ class ConnectController < ApplicationController
     if client.connected?
       redirect_to :controller => 'irc', :action => 'index' and return
     end
-
+    
     if request.post?
       @connection.attributes = params[:connection]
-      redirect_to :controller => 'irc', :action => 'index' if @connection.save
+      if @connection.save
+        client.connect @connection
+        redirect_to :controller => 'irc', :action => 'index' if client.connected?
+      end
     end
   end
   

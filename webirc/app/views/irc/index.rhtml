@@ -1,0 +1,37 @@
+<div id="sidebar">
+  
+  <div id="refresh">
+    <%= periodically_call_remote :frequency => 30, :url => {:action => 'update'} -%>
+    <%= link_to_remote 'update now', :url => {:action => 'update'} %>
+<!-->    <form action="" method="post">
+      <p>refresh every:
+      <select>
+        <option>5 seconds</option>
+        <option>30 seconds</option>
+        <option>5 minutes</option>
+        <option>15 minutes</option>
+        <option value='asdf'>30 minutes</option>
+      </select></p>
+    </form>-->
+  </div>
+  
+  <div id="name_list">
+    <ul>
+      <li>some name</li>
+    </ul>
+  </div>
+  
+</div>
+
+<div id="chat">
+  <ul id="chatlist">
+<%= render :partial => 'event', :collection => @events -%>
+  </ul>
+</div>
+
+<div id="input_bar">
+    <%= form_remote_tag :url => {:action => 'input'} %>
+      <%= text_field_tag 'input' %>
+      <%= submit_to_remote 'send', 'send', :url => {:action => 'input'} -%>
+    <%= end_form_tag %>
+</div>

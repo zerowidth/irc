@@ -54,26 +54,34 @@ class IrcControllerTest < Test::Unit::TestCase
     assert_equal 5, assigns(:events).size, 'there should be 5 events'
     assert_equal @proxy.events.last.id, session[:last_event]
   end
-
-#   def test_connect
-#     @proxy.running = false
-#     get :connect
-#     assert_redirected_to :action => 'index'
-#     assert_equal users(:quentin).id, @manager.calls[:client].first[0]
-#     assert @proxy.running
-#   end
-
-#   def test_connect_without_pref
-#     login_as :arthur # doesn't have a connection pref
-#     get :connect
-#     assert_redirected_to :controller => 'connect'
-#   end
+  
+  # ----- ajax testing
+  def test_update
+    assert_xhr_only :update
+    5.times { @proxy.add_event IRC::Event.new }
+    session[:last_event] = @proxy.events[2].id
+    xhr :get, :update
+    assert_success
+    assert assigns(:events)
+    assert_equal @proxy.events[3], assigns(:events).first
+    assert_equal @proxy.events.last, assigns(:events).last
+    assert_equal @proxy.events.last.id, session[:last_event]
+  end
+  
+  # ----- etc.
 
   def test_login_required
     @request.session[:user] = nil
     assert_requires_login do
       get :index
     end
+  end
+  
+  # ---- helpers
+  
+  def assert_xhr_only(action)
+    get action
+    assert_response :redirect
   end
   
 end
