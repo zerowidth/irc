@@ -92,6 +92,49 @@ class ClientCommandTests < Test::Unit::TestCase
   def test_part_command
     assert_command_sends @partcmd, 'PART #channel'
   end
+  
+  # ----- client connect and disconnect notification &c commands
+  def test_client_connected
+    cc_cmd = ClientConnectedCommand.new
+    assert cc_cmd.is_a?(QueueCommand)
+    cc_cmd.execute(@cq)
+    assert_equal NotifyConnectedCommand, @cq.queue.first.class
+  end
+  
+  def test_client_disconnected
+    cd_cmd = ClientDisconnectedCommand.new
+    assert cd_cmd.is_a?(QueueConfigStateCommand)
+    @config = {:auto_reconnect=>true, :retry_wait=>0.5}
+    cd_cmd.execute(@cq,@config,@state)
+    assert_equal NotifyDisconnectedCommand, @cq.queue.first.class
+    assert_equal ReconnectCommand, @cq.queue[1].class
+
+    # # make sure auto_reconnect is obeyed
+    # FlexMock.use('client mock') do |client|
+    #   client.should_receive(:config).and_return( {:auto_reconnect=>false, :retry_wait=>0.5} )
+    #   client.should_receive(:reconnect).never
+    #   client.should_receive(:command_queue).and_return(@cq)
+    #   cd_cmd.execute(client)
+    # end
+  end
+
+  def test_notify_connected
+    ncc_cmd = NotifyConnectedCommand.new
+    assert ncc_cmd.is_a?(PluginCommand)
+    FlexMock.use('mock plugin handler') do |plugin_handler|
+#      plugin_handler.should_receive(:dispatch).with(:connected).once
+      ncc_cmd.execute(plugin_handler)
+    end    
+  end
+  
+  def test_notify_disconnected
+    ndc_cmd = NotifyDisconnectedCommand.new
+    assert ndc_cmd.is_a?(PluginCommand)
+    FlexMock.use('mock plugin handler') do |plugin_handler|
+#      plugin_handler.should_receive(:dispatch).with(:disconnected).once
+      ndc_cmd.execute(plugin_handler)
+    end
+  end
 
   # helper to make testing of basic queue commands easier
   def assert_command_sends(cmd, data)

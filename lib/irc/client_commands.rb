@@ -3,6 +3,41 @@ require 'irc/message'
 require 'irc/rfc2812'
 
 module IRC
+  
+# client and connection-related:
+class ClientConnectedCommand < QueueCommand
+  def execute(queue)
+    queue << NotifyConnectedCommand.new
+  end
+end
+
+class ClientDisconnectedCommand < QueueConfigStateCommand
+  def execute(queue,config,state)
+    queue << NotifyDisconnectedCommand.new
+    if config[:auto_reconnect] && config[:retry_wait]
+      sleep(config[:retry_wait])
+      queue << ReconnectCommand.new
+    end
+  end
+end
+
+class NotifyConnectedCommand < PluginCommand
+  def execute(plugin_manager)
+#    plugin_manager.dispatch(:connected)
+  end
+end
+
+class NotifyDisconnectedCommand < PluginCommand
+  def execute(plugin_manager)
+#    plugin_manager.dispatch(:disconnected)
+  end
+end
+
+class ReconnectCommand < ClientCommand
+  def execute(client)
+    client.reconnect
+  end
+end
 
 # DataCommand: contains text data coming in from the network
 class DataCommand < PluginCommand
@@ -13,7 +48,6 @@ class DataCommand < PluginCommand
     msg = Message.parse(@data)
     plugin_handler.dispatch(msg)
   end
-  
 end
 
 # SendCommand: contains text data to send over the network
@@ -32,17 +66,10 @@ class QuitCommand < ClientCommand
   def initialize(reason=nil)
     @reason = reason
   end
-    
   def execute(client)
     client.quit(@reason)
   end
 end
-
-class ReconnectCommand < ClientCommand
-  def execute(client)
-    client.reconnect
-  end
-end   
 
 # RegisterCommand: (attempts to) register the client on the network
 class RegisterCommand < QueueCommand

@@ -164,6 +164,14 @@ class PluginManagerTest < Test::Unit::TestCase
     assert_equal 3, CallRecorderPlugin.count[:catchall], 'catchall should have been invoked twice more'
   end
   
+  def test_connect_dispatch
+    flunk
+  end
+  
+  def test_disconnect_dispatch
+    flunk
+  end
+  
   # cleanup/teardown
   
   def test_thread_cleanup

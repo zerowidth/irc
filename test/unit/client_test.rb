@@ -1,6 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
 require 'irc/client'
-require 'mocks/command_mock' # mock command for command execution testing
 
 class ClientTest < Test::Unit::TestCase
   include IRC
@@ -13,11 +12,15 @@ class ClientTest < Test::Unit::TestCase
   class IRC::Client
     attr_reader :plugin_manager, :connection # make the basics accessible
     attr_reader :queue_thread # make queue and quit flag accessible
+    attr_reader :data_queue # internal data queue
     def set_quit; @quit = true; end # this is highly implementation-related!
   end
   # and same for PluginManager, for testing loading of the core plugin
   class IRC::PluginManager
     attr_reader :plugins
+  end
+  class IRC::IRCConnection
+    attr_reader :command_queue
   end
   
   # set up some test commands for testing command execution
@@ -37,6 +40,17 @@ class ClientTest < Test::Unit::TestCase
   class TestQueueCommand < IRC::QueueCommand; include ExecutionRecorder; end
   class TestQueueConfigStateCommand < IRC::QueueConfigStateCommand
     include ExecutionRecorder;
+  end
+  class TestSleepCommand < IRC::ClientCommand
+    def execute
+      sleep(0.5)
+    end
+  end
+  class TestTimedCommand < IRC::ClientCommand
+    attr_reader :time
+    def execute
+      time = Time.now
+    end
   end
   
   def setup
@@ -154,9 +168,8 @@ class ClientTest < Test::Unit::TestCase
     assert @client.connection.connected?
     assert_equal nil, @serverclient.gets # connection should have been closed
     server_accept # get the new connection
-    2.times { assert gets_from_server } # should re-register
+    assert_false @serverclient.closed?
   end
-    
 
   # test that the client correctly executes commands based on their type.
   # This tests that the client grabs the commands off the queue and that they
@@ -187,14 +200,14 @@ class ClientTest < Test::Unit::TestCase
     cmd = TestQueueCommand.new
     execute_with_client cmd
     assert_equal 1, cmd.params.size
-    assert_equal @client.command_queue, cmd.params[0]
+    assert_equal @client.data_queue, cmd.params[0], 'should be executed with data queue'
   end
   
   def test_queue_config_state_command_execution
     cmd = TestQueueConfigStateCommand.new
     execute_with_client cmd
     assert_equal 3, cmd.params.size
-    assert_equal @client.command_queue, cmd.params[0]
+    assert_equal @client.data_queue, cmd.params[0], 'should be executed with data queue'
     assert_equal @client.config, cmd.params[1]
     assert_equal @client.state, cmd.params[2]
   end
@@ -223,12 +236,51 @@ class ClientTest < Test::Unit::TestCase
     @client.quit
     assert_equal false, @client.running?, 'client should not be running'
   end
+  
+  # ----- refactoring for two internal queues instead of one
+  def test_data_queue_exists
+    assert @client.command_queue
+    assert @client.data_queue
+  end
+  
+  def test_socket_sends_to_data_queue
+    client_connect
+    assert @client.queue_thread.alive?, 'queue thread should be running'
+    @client.queue_thread.kill # now nothing will empty the queues
+    @serverclient.puts('lol')
+    sleep(0.3) # wait for it...
+    assert @client.command_queue.empty?, 'command queue should be empty'
+    assert_false @client.data_queue.empty?, 'data queue should have something in it!'
+    # check the contents of the queue
+    assert @client.data_queue.pop(true).kind_of?(RegisterCommand), 'there should be a register command here'
+    assert @client.data_queue.pop(true).kind_of?(DataCommand), 'there should be a data command here'
+  end
+  
+  def test_command_queue_gets_used
+    # no explicit test needed here, since it's made implicit by the use of
+    # command queue in the execute_with_client helper below, and elsewhere
+  end
+
+  def test_client_queue_emptied_after_connection_successful
+    # also not needed, it's implicit in the execute_with_client helper
+  end
+  
+  def test_auto_reconnect
+    client_connect
+#    sleep(0.05) # wait for things to settle
+    @serverclient.close
+    t = Thread.new { @serverclient = @server.accept }
+    t.join(RETRY_WAIT*2) # wait for twice the retry interval
+    assert_false @serverclient.closed?, 'server should have received reconnection!'
+    assert @client.running?, 'client should have reconnected!'
+  end
 
   # helpers ###########################
   def config_client
     @client.config[:host] = TEST_HOST
     @client.config[:port] = TEST_PORT
     @client.config[:retry_wait] = RETRY_WAIT    
+    @client.config[:auto_reconnect] = true
   end
   
   def client_connect
@@ -270,11 +322,11 @@ class ClientTest < Test::Unit::TestCase
     # is successful, it's possible that the queue thread quits out before anything
     # is added to the command queue. if this happens, the command will not be executed
     
-    # join the queue thread to make sure the command gets executed.
+    # join the queue thread for awhile to make sure the command gets executed.
     # since @quit is set, it should stop after processing the command, aka immediately.
-    @client.queue_thread.join(0.1) # catches the exception
-    
-    assert_false @client.queue_thread.alive?, 'check queue thread quit flag, something''s wrong'    
+    @client.queue_thread.join(0.2) # catches the exception
+    assert @client.command_queue.empty?, 'uh oh, command queue should be empty. are things being transferred?'
+    assert_false @client.queue_thread.alive?, "check queue thread quit flag, something's wrong"
   end
   
 end

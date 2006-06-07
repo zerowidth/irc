@@ -8,7 +8,7 @@
 
 require 'socket'
 require 'irc/common'
-require 'irc/client_commands' # need DataCommand
+require 'irc/client_commands' # need DataCommand & notifications
 
 module IRC
   
@@ -18,21 +18,21 @@ class IRCConnection
   
   cattr_accessor :logger
   
-  def initialize(host, port, command_queue, retry_wait=10)
+  def initialize(host, port, command_queue)
     @host = host
     @port = port
     @command_queue = command_queue # queue to send data to
-    # configurable via params to ease testing:
-    @retry_wait = retry_wait # how long to wait before trying a connection again
+    
     @socket = nil
     @connection_thread = nil
     @disconnect = false # flag for connection thread loops
   end
   
-  def start
-    # connect is called within the main loop, but it's called here as well
+  def connect
+    # start_connection is called within the main loop, but it's called here as well
     # to gather any network errors or other exceptions that might occur
-    connect
+    start_connection
+
     # start main loop
     start_main_loop
   end
@@ -40,34 +40,35 @@ class IRCConnection
   # disconnect will close down a current connection
   def disconnect
     @disconnect = true; # set the flag
-    @socket.close unless @socket.closed? # then kill the connection
+    @socket.close if @socket && !@socket.closed? # then kill the connection
     # now join the thread - catch exceptions, and close it all down
     @connection_thread.join if @connection_thread
     @connection_thread = nil
   end
   
   # send data to the socket
+  # ignores network errors when sending
   def send(data)
-    raise "not connected" unless connected?
-    logger.info "<-- " + data.inspect
-    @socket.puts data
+    begin
+      raise "not connected" unless connected?
+      logger.info "<-- " + data.inspect
+      @socket.puts data
+    rescue RuntimeError, SystemCallError, IOError => e # socket exceptions or network errors
+      logger.warn "connection error: #{e}"
+    end
   end
   
   def connected?
     @socket && !@socket.closed?
   end
   
-  # interrupts the current connection, leaving the reconnect loop running
-  def cancel_current_connection
-    @socket.close
-  end
-  
   private #############################
   
-  def connect
+  def start_connection
     raise "already connected" if connected?
-    logger.info "attempting to connect to #{@host}:#{@port}"
+    logger.info "connecting to #{@host}:#{@port}"
     @socket = TCPSocket.open(@host, @port)
+    @command_queue << ClientConnectedCommand.new # let the client know
   end
   
   def start_main_loop
@@ -79,44 +80,36 @@ class IRCConnection
   end
   
   def socket_main_loop
-    until @disconnect do
-      begin
-        # connect (unless already connected, which is the case if #start is called)
-        connect unless connected?
-      
-        # loop on the socket, catch a disconnection event
-        # two ways things could go:
-        #   one: server disconnects us, gets returns nil.
-        #   two: we disconnect. gets throws exception.
-        #   three: ok three ways: some other random error
-        until @disconnect do
-          # wait for state change on the socket
-          if Kernel.select([@socket], nil, nil, SOCKET_READY_WAIT)
-            data = @socket.gets # gets throws an IOError if the socket is closed
-            break unless data # data is nil if server disconnected us
-            data.strip! # clear out whitespace, crlf
-            if data.length > 0 # ignore if it was just whitespace
-              handle_data(data)
-            end
-          end
-        end # loop
-      
-        # wait for the reconnect
-        sleep_for_retry
+    begin
+      # connect (unless already connected, which is the case if #start is called)
+      start_connection unless connected?
 
-      rescue SystemCallError, IOError => e # socket exceptions or network errors
-        unless @disconnect
-          logger.warn "connection error: #{e}, retrying in #{@retry_wait} seconds"
-          sleep_for_retry
+      # loop on the socket
+      # two ways things could go:
+      #   one: server disconnects us, gets returns nil.
+      #   two: we disconnect. gets throws exception.
+      #   three: ok three ways: some other random error
+      loop do
+        # wait for state change on the socket
+        if Kernel.select([@socket], nil, nil, SOCKET_READY_WAIT)
+          data = @socket.gets # gets throws an IOError if the socket is closed
+          break unless data # data is nil if server disconnected us
+          data.strip! # clear out whitespace, crlf
+          if data.length > 0 # ignore if it was just whitespace
+            handle_data(data)
+          end
         end
-      ensure
-        @socket.close if connected?
+      end # loop
+
+    rescue SystemCallError, IOError => e # socket exceptions or network errors
+      unless @disconnect
+        logger.warn "connection error: #{e}"
       end
-    end # until @disconnect
-  end
-  
-  def sleep_for_retry
-    sleep(@retry_wait) unless @disconnect
+    ensure
+      @socket.close if connected?
+    end
+    
+    @command_queue << ClientDisconnectedCommand.new
   end
 
   def handle_data(data)

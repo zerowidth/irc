@@ -49,6 +49,7 @@ class CorePlugin < IRC::Plugin
     send_command(CMD_PONG, message.params[0])
   end
   
+  # ERROR
   def error(message)
     @command_queue << ReconnectCommand.new
   end
