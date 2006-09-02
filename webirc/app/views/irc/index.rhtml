@@ -2,7 +2,8 @@
   
   <div id="refresh">
     <%= periodically_call_remote :frequency => 30, :url => {:action => 'update'} -%>
-    <%= link_to_remote 'update now', :url => {:action => 'update'} %>
+    <p><%= link_to_remote 'update now', :url => {:action => 'update'} %></p>
+    <p><%= link_to_remote 'disconnect', :url => {:action => 'disconnect'} %></p>
 <!-->    <form action="" method="post">
       <p>refresh every:
       <select>
@@ -25,13 +26,18 @@
 
 <div id="chat">
   <ul id="chatlist">
-<%= render :partial => 'event', :collection => @events -%>
+<%= render :partial => 'event', :collection => @events if @events-%>
   </ul>
+  <div id="bottom_of_chat"></div>
 </div>
 
 <div id="input_bar">
-    <%= form_remote_tag :url => {:action => 'input'} %>
+    <%= form_remote_tag :url => {:action => 'input'}, :loading => "Field.clear('input')" %>
       <%= text_field_tag 'input' %>
       <%= submit_to_remote 'send', 'send', :url => {:action => 'input'} -%>
     <%= end_form_tag %>
 </div>
+<%= update_page_tag do |page| 
+  page['input'].focus
+  page.visual_effect :scrollTo, :bottom_of_chat
+end %>

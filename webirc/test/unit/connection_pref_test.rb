@@ -56,6 +56,7 @@ class ConnectionPrefTest < Test::Unit::TestCase
     def test_to_hash
       options = {:nick => 'n', :realname => 'r', :server => 's', :port => 1, :channel => 'c'}
       conn = ConnectionPref.new options
-      assert_equal options, conn.to_hash
+      api_options = {:nick => 'n', :realname => 'r', :host => 's', :port => 1, :channel => 'c'}
+      assert_equal api_options, conn.to_hash
     end
 end

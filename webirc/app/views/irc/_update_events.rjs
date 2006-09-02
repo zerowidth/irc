@@ -1,3 +1,6 @@
-events.each do |event|
-  page.insert_html :bottom, 'chatlist', :partial => 'event', :locals => { :event => event }
+if events.size > 0
+  events.each do |event|
+    page.insert_html :bottom, 'chatlist', :partial => 'event', :locals => { :event => event }
+  end
+  page.visual_effect :scrollTo, :bottom_of_chat
 end

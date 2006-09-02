@@ -1,5 +1,6 @@
-require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
+require File.expand_path(File.dirname(__FILE__) + "/../test_helper")
 require 'irc/message'
+require 'irc/rfc2812'
 
 include IRC
 class MessageTest < Test::Unit::TestCase
@@ -21,6 +22,7 @@ class MessageTest < Test::Unit::TestCase
     assert_equal 'nathan', msg.prefix[:nick]
     assert_equal '~nathan', msg.prefix[:user]
     assert_equal 'subdomain.domain.net', msg.prefix[:host]
+    assert_equal MessageInfo::User.new('nathan', '~nathan@subdomain.domain.net'), msg.user
   end
   
   def test_parsing_from_server
@@ -32,7 +34,7 @@ class MessageTest < Test::Unit::TestCase
     assert_nil msg.prefix[:user]
     assert_nil msg.prefix[:host]
     assert_equal 'server.com', msg.sender
-    #assert_equal 'rbot', msg.receiver
+    assert_equal 'server.com', msg.user
   end
   
   # test parsing for weird PING messages
@@ -57,4 +59,7 @@ class MessageTest < Test::Unit::TestCase
     assert_equal ['Closing Link: 0.0.0.0 (Ping timeout)'], msg.params
   end
   
+  def test_equal
+    assert_equal Message.parse(@general_server_message), Message.parse(@general_server_message)
+  end
 end

@@ -53,12 +53,12 @@ end
 
 # Include your application configuration below
 
-case RAILS_ENV
-when 'test'
-  Client.drb_uri = 'druby://localhost:12345'
-else # production or development, set this here
-  Client.drb_uri = 'druby://localhost:56239'
-end
+# case RAILS_ENV
+# when 'test'
+#   Client.drb_uri = 'druby://localhost:12345'
+# else # production or development, set this here
+#   Client.drb_uri = 'druby://localhost:56239'
+# end
 
 DEFAULT_NICKNAME = 'webirc_user'
 DEFAULT_REALNAME = 'webirc user'

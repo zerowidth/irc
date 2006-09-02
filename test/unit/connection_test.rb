@@ -1,53 +1,41 @@
-require File.expand_path(File.dirname(__FILE__) + "/../test-helper")
+require File.expand_path(File.dirname(__FILE__) + "/../test_helper")
 require 'irc/connection'
-require 'stubs/queue_stub'
-require 'logger'
-
-# this test relies on:
-# - command queue stub
-# - a functioning DataCommand
 
 class ConnectionTest < Test::Unit::TestCase
   include IRC
   
-  TEST_HOST = 'localhost'
-  TEST_PORT = 12345
-#  RETRY_WAIT = 0.5
-  
   def setup
-    @cq = QueueStub.new # stub so it doesn't rely on actual mutex&stuff implementation
-    @conn = IRCConnection.new(TEST_HOST, TEST_PORT, @cq)
+    SocketStub.server_connected = true
+    @conn = Connection.new(TEST_HOST, TEST_PORT)
     @server = TCPServer.new(TEST_HOST, TEST_PORT)
-    @client = nil # client connection, from server
-    IRCConnection.logger = Logger.new(nil) # suppress logging errors during test
-    connect
   end
   
   def teardown
-    @conn.disconnect
+    @conn.disconnect if @conn.connected?
     @client.close if @client && !@client.closed?
-    @server.close if @server && !@server.closed?
-  end
-  
-  def connect
-    t = Thread.new { @client = @server.accept } # wait for a connection
-    @conn.connect
-    t.join(0.2) # with a timeout in case something goes wrong
+    if @server && !@server.closed?
+      @server.close 
+    end
   end
 
-  def gets_from_server
-    data = nil # scope
-    t = Thread.new { data = @client.gets.strip }
-    t.join(0.2) # in case of problems
-    data
+  def connect
+    assert @client.nil?, 'client should be nil!'
+    @conn.connect
+#    @client = @server.accept
   end
+
+  # def gets_from_server
+  #   data = nil # scope
+  #   t = Thread.new { data = @client.gets.strip }
+  #   t.join(0.5) # in case of problems
+  #   data
+  # end
   
   # tests #############################
   
   def test_basic_connection
-
-    assert @conn.connected?
-    
+    connect
+    assert @conn.connected?, 'should be connected'
     # check that start doesn't work twice
     assert_raises RuntimeError do
       @conn.connect
@@ -59,64 +47,57 @@ class ConnectionTest < Test::Unit::TestCase
 
   end
   
-  # test that sending data to the connection results in a DataCommand object in the
-  # (stub) Queue
-  def test_send_and_receive    
-    # greeting from server
-    assert_equal 1, @cq.queue.size # should only have the connect in it
-    @client.puts('hello')
-    sleep(0.2) # wait for @conn to get it
-
-    # check that the command queue has a new DataCommand on it
-    assert_equal 2, @cq.queue.size # should have the connect command as well as the data command
-    
-    # reply to server
+  def test_send
+    connect
     @conn.send('greetings')
-    assert_equal 'greetings', gets_from_server
-    
+    assert_equal 'greetings', @conn.socket.server_gets #gets_from_server
   end
   
-  # def test_reconnect
-  #   assert @conn.connected?
-  #   
-  #   # make sure it's working
-  #   @conn.send('hello')
-  #   assert 'hello', gets_from_server
-  # 
-  #   # kill the server-side connection
-  #   @client.close
-  #   
-  #   # wait for the reconnect
-  #   t = Thread.new { @client = @server.accept } # wait for another connection
-  #   t.join(RETRY_WAIT*2) # wait for twice the retry interval
-  #   
-  #   assert_false @client.closed?, 'should have reconnected!'
-  #   assert @conn.connected?
-  # 
-  #   # make sure it works again
-  #   @conn.send('hello')
-  #   assert_equal 'hello', gets_from_server   
-  #   
-  # end
-  
-  # ----- refactoring to add connect/disconnect commands for the client to handle
-  # in lieu of having the connection automatically do the reconnection stuff
-  def test_connected_command
-    assert_false @cq.queue.empty?, 'there should be something in the queue, yo'
-    assert @cq.queue.first.is_a?(ClientConnectedCommand), 'there should be a ClientConnectedCommand here'
+  def test_connect_disconnect_callbacks
+    # data not included here because the disconnect happens too soon
+    assert_callbacks @conn, :connected, :disconnected do
+      connect
+      @conn.disconnect
+    end
   end
-
-  def test_disconnected_command
+  
+  def test_server_disconnected_callback
+    connect
+    assert_callbacks @conn, :disconnected do
+      @conn.socket.server_close # @client.close # kill the connection from the server side
+      @conn.connection_thread.join(1) # wait a second for the dispatch to go out
+    end
+  end
+  
+  def test_data_callback
+    connect
+    assert_callbacks @conn, [:data, 'lol'] do
+      @conn.set_disconnect
+      @conn.socket.server_puts 'lol'
+      @conn.connection_thread.join(1) # wait for the client to process the socket send
+    end
+  end
+  
+  def test_connection_with_exception
+    SocketStub.server_connected = false
+    recorder = CallbackRecorder.new(:connection_error)
+    recorder.respond_to? :connection_error
+    recorder.connection_error()
+    @conn.add_observer recorder, :connection_error
+    connect
+    wait_for_callback_dispatch @conn
+    assert_equal :connection_error, recorder.calls.first
+    assert recorder.calls[1][1].is_a? Errno::ECONNREFUSED
+  end
+  
+  def test_wait_for_disconnect
+    connect
+    t = Thread.new { @conn.wait_for_disconnect }
+    t.join(0)
+    assert t.alive?, 'should still be alive'
     @conn.disconnect
-    assert_false @cq.queue.empty?, 'there should be things in the queue'
-    assert @cq.queue.last.is_a?(ClientDisconnectedCommand), 'there should be a ClientDisconnectedCommand here'
+    t.join(0.5) # wait for it
+    assert_false t.alive?
   end
 
-  def test_server_initiated_disconnected_command
-    @client.close # kill it from the server-side!
-    sleep(0.05) # wait just a second, things need to get processed
-    assert_false @cq.queue.empty?, 'there should be things in the queue'
-    assert @cq.queue.last.is_a?(ClientDisconnectedCommand), 'there should be a ClientDisconnectedCommand here'
-  end
-  
 end

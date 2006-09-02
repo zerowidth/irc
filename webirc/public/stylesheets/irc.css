@@ -1,54 +1,68 @@
-label {
-  float: left;
-  clear: left;
-  display: block;
-}
-label > input {
-
-}
-
-
 html {
   margin: 0;
   padding: 0;
-  background: red;
-}
-body {
-  color: black;
-  background-color: white;
-  margin: 0;
-  padding: 0;
+  background: #000044;
 }
 
-div {
-  border: 1px solid blue; 
+body {
+  color: black;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+#centeredform {
+  text-align: left;
+  background-color: white;
+  padding: 1em;
+  width: 25em;
+  margin: 5em auto 1em auto;
+}
+
+fieldset {
+/*  padding: 0;*/
+}
+
+fieldset dl dt, fieldset dl dd { 
+  line-height: 2em;
+}
+
+fieldset dl dt { 
+  float: left;
+  padding-right: 0.5em;
+  width: 6em;
+  text-align: right;
 }
 
 #chat {
-  font-family: monospace;
+  font-family: Lucida Grande, monospace;
+  font-size: 0.9em;
   width: 80%;
-  margin-bottom: 50px;
+  margin: 0 0 3.4em 0;
+  background: #FFF;
+  text-align: left;
 }
 
 #chat ul {
-  margin: 0.5em;
-  padding: 0;
+  margin: 0;
+  padding: 0.5em;
 }
+
 #chat li {
   list-style: none;
-  margin: 0;
+  margin: 0.1em 0 0 0;
   padding: 0;
   text-indent: 0;
 }
 
-#chat li .timestamp {
-}
-#chat li .nick {
-}
-
-#entry {
-  
-}
+#chat li .server { color: #800; }
+#chat li .timestamp { color: #888; }
+#chat li .nick { color: #040; }
+#chat li .action { color: #800; }
+#chat li .notice { color: #008;}
+#chat li .joinpart { color: #008;}
+#chat li .self { color: #E68232;}
+#chat li .private { color: #800; }
 
 #sidebar {
   margin: 0;
@@ -73,6 +87,7 @@ div {
 #input_bar {
   background: silver;
   width: 80%;
+  height: 2.4em;
   margin: 0;
   padding: 0;
 
@@ -85,7 +100,7 @@ div {
 }
 #input_bar form {
   text-align: center;
-  margin: 0
+  margin: 0.5em
 }
 #input_bar input#text {
   width: 95%;

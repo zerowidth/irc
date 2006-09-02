@@ -22,7 +22,7 @@ class ConnectionPref < ActiveRecord::Base
   def to_hash
     { :nick => nick, 
       :realname => realname, 
-      :server => server, 
+      :host => server, 
       :port => port, 
       :channel => channel
     }

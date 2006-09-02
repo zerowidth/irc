@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+require 'drb/acl'
+require 'logger'
+require File.dirname(__FILE__) + "/../../config/boot.rb"
+require File.dirname(__FILE__) + '/lib/backgroundrb'
+require 'rubygems'
+require 'active_record'
+require 'yaml'
+defaults = {'host' => 'localhost', 
+            'port' => '22222',
+            'environment' => 'development',
+            'databse_yml' => 'config/database.yml',
+            'load_rails'  => true}
+begin
+  CONFIG = defaults.merge(YAML.load(ERB.new(IO.read("#{RAILS_ROOT}/config/backgroundrb.yml")).result))
+rescue
+  CONFIG = defaults
+end            
+if CONFIG['load_rails']
+  ActiveRecord::Base.establish_connection(YAML.load(ERB.new(IO.read("#{RAILS_ROOT}/#{CONFIG['databse_yml']}")).result)[CONFIG['environment']])
+end
+
+# Require all worker classes in lib/workers/
+Dir["#{RAILS_ROOT}/lib/workers/*"].each{ |worker| require worker }
+
+# DRb has an access control feature. Here we are installing an acl to only
+# allow localhost to connect to the DRb server. If you need to add another
+# host to the list add another allow like:  allow foo.bar.com or allow 192.168.0.6
+acl = ACL.new(%w{deny all allow localhost allow 127.0.0.1})
+DRb.install_acl(acl)
+
+# if the -d flag is specified, fork twice into a daemon and detach from the terminal.
+if ARGV.delete('-d')
+  fork{
+    stdin = open '/dev/null', 'r'
+    stdout = open '/dev/null', 'w'
+    stderr = open '/dev/null', 'w'
+    STDIN.reopen stdin
+    STDOUT.reopen stdout
+    STDERR.reopen stderr
+    $0 = "backgroundrb"
+    fork{
+      DRb.start_service("druby://#{CONFIG['host']}:#{CONFIG['port']}", BackgrounDRb::MiddleMan.new)
+      File.open("#{RAILS_ROOT}/log/backgroundrb.pid", 'w+'){|f| f.write(Process.pid)}
+      DRb.thread.join
+    } and exit!
+  }
+else
+  DRb.start_service("druby://#{CONFIG['host']}:#{CONFIG['port']}", BackgrounDRb::MiddleMan.new)
+  puts "DRb URI: #{DRb.uri}"
+  puts "Pid: #{Process.pid}"
+  File.open("#{RAILS_ROOT}/log/backgroundrb.pid", 'w+'){|f| f.write(Process.pid)}
+  DRb.thread.join
+end

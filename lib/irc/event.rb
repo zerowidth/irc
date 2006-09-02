@@ -32,19 +32,26 @@ module IRC
 
   
   # individual events
-    
+  # TODO add ConnectionError event (:connection_error callback in connection-->client? perhaps!)
+  
+  # server-related:
+  class ConnectionErrorEvent < Event; end
+  class DisconnectedEvent < Event; end
+  
   # channel-related:
   class JoinEvent < Event; end # joining a channel
   class PartEvent < Event; end # leaving a channel
   class QuitEvent < Event; end # quitting the server
-  class TopicEvent < Event; end # topic change in a channel, or when joining
-  class NickChangeEvent < Event; end # self nick change
+  class TopicChangedEvent < Event; end # topic change in a channel, or when joining
+  class NickChangedEvent < Event; end # self nick change
   class NameListEvent < Event; end # server is listing names in a chan
-  class EndOfNamesEvent < Event; end # server is done listing names in a chan
+#  class EndOfNamesEvent < Event; end # server is done listing names in a chan
 
   # message-related:
-  class PrivMsgEvent < Event; end # private message, either to a chan or to a person
-  class NoticeEvent < Event; end # notice event, either to a chan or to a person
+  class ChannelMessageEvent < Event; end
+  class PrivateMessageEvent < Event; end
+  class ChannelNoticeEvent < Event; end
+  class PrivateNoticeEvent < Event; end
   
   # etc.
   class UnknownServerEvent < Event; end # catchall for unknown server messages

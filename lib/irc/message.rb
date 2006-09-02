@@ -1,7 +1,10 @@
 require 'irc/common'
-require 'irc/rfc2812'
 
 module IRC
+  module MessageInfo
+    User = Struct.new(:nick, :username) # for cleaner handling of nick prefix data
+  end
+  
   class Message
     include IRC # for command consts
 
@@ -20,6 +23,17 @@ module IRC
         prefix, params, sender, message_type, raw_message
     end
     
+    # for convenience:
+    def user
+      if @prefix[:nick] && @prefix[:user] && @prefix[:host]
+        MessageInfo::User.new(@prefix[:nick], "#{@prefix[:user]}@#{@prefix[:host]}")
+      elsif @prefix[:server]
+        @prefix[:server]
+      else
+        nil
+      end
+    end
+    
     def self.parse(data)
       prefix = {}
       params = []
@@ -32,7 +46,7 @@ module IRC
       when /^([^:]\S+)\s(.*)$/
         message_type, message = $~.captures
       else
-        logger.warn "could not parse: #{data}" 
+        logger.warn "could not parse: #{data}"
         return
       end
 
@@ -58,5 +72,12 @@ module IRC
       
       Message.new(prefix,params,sender,message_type,raw_message)
     end
+
+    # for easier testing. can compare two messages.
+    include Comparable
+    def <=>(other)
+      raw_message <=> other.raw_message
+    end
+    
   end # class
 end

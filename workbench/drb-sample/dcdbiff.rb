@@ -12,7 +12,7 @@ class Notify
     @biff = biff
     @command = command
 
-    @biff.add_observer(self)
+    @biff.add_observer  @(self)
   end
 
   def update(filename, time)

@@ -1,9 +1,35 @@
 <%=h @gnar %>
+<!-- <div id="centeredform">
 <% form_for :connection, @connection do |f| -%>
-  <label for="nick">Nickname: <%= f.text_field :nick %></label>
-  <label for="realname">Real Name: <%= f.text_field :realname %></label>
-  <label for="server">Server: <%= f.text_field :server %></label>
-  <label for="port">Port: <%= f.text_field :port %></label>
-  <label for="channel">Channel: <%= f.text_field :channel %></label>
-  <%= submit_tag 'connect' %>
+  <fieldset><legend>Connect to an IRC Server</legend>
+  <label for="connection_nick" class="first">Nickname: <%= f.text_field :nick %></label>
+  <label for="connection_realname">Real Name: <%= f.text_field :realname %></label>
+  <label for="connection_server">Server: <%= f.text_field :server %></label>
+  <label for="connection_port">Port: <%= f.text_field :port %></label>
+  <label for="connection_channel">Channel: <%= f.text_field :channel %></label>
+  <%= submit_tag 'connect', :class=>'submit' %>
+    <div class="clearer"></div>
+  </fieldset>
 <% end -%>
+</div> -->
+
+<div id="centeredform">
+<% form_for :connection, @connection do |f| -%>
+  <fieldset><legend>Connect to an IRC Server</legend>
+  <dl>
+    <dt><label for="connection_nick">Nickname: </label></dt>
+    <dd><%= f.text_field :nick %></dd>
+    <dt><label for="connection_realname">Real Name: </label></dt>
+    <dd><%= f.text_field :realname %></dd>
+    <dt><label for="connection_server">Server: </label></dt>
+    <dd><%= f.text_field :server %></dd>
+    <dt><label for="connection_port">Port: </label></dt>
+    <dd><%= f.text_field :port %></dd>
+    <dt><label for="connection_channel">Channel: </label></dt>
+    <dd><%= f.text_field :channel %></dd>
+    <dt>&nbsp;</dt>
+    <dd><%= submit_tag 'connect' %></dd>
+  </dl>
+  </fieldset>
+<% end -%>
+</div>

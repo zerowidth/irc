@@ -1,1 +1,22 @@
-<li><%=h irc_timestamp( event.time ) -%> <%=h '<' + (event.who || 'gnar') + '>' -%> <%=h [event.what].flatten.last %> (<%=h event.context %>)</li>
+<li><%= irc_timestamp( event.time ) -%> 
+<%=
+case event
+when IRC::ChannelNoticeEvent, IRC::PrivateNoticeEvent
+  irc_who(event) + span_class('notice', event.what)
+when IRC::NameListEvent
+  span_class('server', "who's here: ") + span_class('names', event.what.join(' '))
+when IRC::ChannelMessageEvent, IRC::PrivateMessageEvent
+  irc_privmsg( event )
+when IRC::JoinEvent
+  span_class('joinpart', event.who + ' has joined ' + event.where)
+when IRC::PartEvent
+  span_class('joinpart', event.who + ' has left ' + event.where + (event.what ? " (#{h(event.what)})" : '') )
+when IRC::QuitEvent
+  span_class('joinpart', event.who + ' has quit') + (event.what.empty? ? '' : " (#{h(event.what)})" )
+when IRC::NickChangedEvent
+  span_class('joinpart', event.who + ' is now known as ' + event.what )
+else
+  h(event.class) + ' not handled yet'
+end
+%>
+</li>

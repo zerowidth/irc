@@ -46,4 +46,6 @@ class Test::Unit::TestCase
     assert_difference object, method, 0, &block
   end
   
+  include Arts # RJS assertions
+  
 end
